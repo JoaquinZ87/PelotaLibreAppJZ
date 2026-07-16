@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono de la app: pelota de fútbol dentro de un anillo verde. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Anillo verde -->
+    <path android:fillColor="#5CB85C" android:pathData="M2,54 a52,52 0 1,0 104,0 a52,52 0 1,0 -104,0 z" />
+    <!-- Interior blanco -->
+    <path android:fillColor="#FFFFFF" android:pathData="M17,54 a37,37 0 1,0 74,0 a37,37 0 1,0 -74,0 z" />
+    <!-- Contorno de la pelota (negro) -->
+    <path android:fillColor="#111111" android:pathData="M20.5,54 a33.5,33.5 0 1,0 67,0 a33.5,33.5 0 1,0 -67,0 z" />
+    <!-- Cara de la pelota (blanca) -->
+    <path android:fillColor="#FFFFFF" android:pathData="M23,54 a31,31 0 1,0 62,0 a31,31 0 1,0 -62,0 z" />
+
+    <!-- Pentágono central -->
+    <path android:fillColor="#111111" android:pathData="M54,43 L64.46,50.60 L60.47,62.90 L47.53,62.90 L43.54,50.60 Z" />
+    <!-- Pentágonos alrededor -->
+    <path android:fillColor="#111111" android:pathData="M66.34,30.01 L73.00,34.85 L70.45,42.67 L62.23,42.67 L59.68,34.85 Z" />
+    <path android:fillColor="#111111" android:pathData="M73.97,53.49 L80.63,58.33 L78.08,66.15 L69.86,66.15 L67.31,58.33 Z" />
+    <path android:fillColor="#111111" android:pathData="M54,68 L60.66,72.84 L58.11,80.66 L49.89,80.66 L47.34,72.84 Z" />
+    <path android:fillColor="#111111" android:pathData="M34.03,53.49 L40.69,58.33 L38.14,66.15 L29.92,66.15 L27.37,58.33 Z" />
+    <path android:fillColor="#111111" android:pathData="M41.66,30.01 L48.32,34.85 L45.77,42.67 L37.55,42.67 L35.00,34.85 Z" />
+</vector>

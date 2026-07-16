@@ -1,0 +1,15 @@
+{
+  // VS Code (extensiones de Java/Gradle) debe usar el JDK 21 que trae Android Studio,
+  // NO el Java 8 viejo del sistema. Sin esto, el servidor de Gradle de VS Code falla
+  // con "unrecognized option: --add-opens / Could not create the Java Virtual Machine".
+  // Android Studio ignora estas settings; solo afectan a VS Code.
+  "java.jdt.ls.java.home": "C:/Program Files/Android/Android Studio/jbr",
+  "java.import.gradle.java.home": "C:/Program Files/Android/Android Studio/jbr",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-21",
+      "path": "C:/Program Files/Android/Android Studio/jbr",
+      "default": true
+    }
+  ]
+}
