@@ -5,8 +5,8 @@ import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
 /**
- * Cliente HTTP único (pool/HTTP2) + GET con headers de navegador.
- * Lo comparten AgendaScraper y ChannelScraper. Body one-shot -> siempre .use { }.
+ * Cliente HTTP único + GET con headers de navegador. El User-Agent y el Referer (origin del sitio)
+ * se adaptan a cada fuente. Body one-shot -> siempre .use { }.
  */
 object SiteHttp {
 
@@ -15,15 +15,17 @@ object SiteHttp {
         .readTimeout(20, TimeUnit.SECONDS)
         .build()
 
+    private val ORIGIN = Regex("^(https?://[^/]+)")
+
     /** GET simple. Lanza excepción si no es 2xx. */
-    fun get(url: String): String {
-        val base = url.substringBefore("/es/") + "/es/"
+    fun get(url: String, userAgent: String = AppConfig.BROWSER_UA): String {
+        val origin = ORIGIN.find(url)?.value ?: url
         val req = Request.Builder()
             .url(url)
-            .header("User-Agent", AppConfig.userAgent)
+            .header("User-Agent", userAgent)
             .header("Accept-Language", "es-ES,es;q=0.9")
             .header("Accept", "text/html,application/xhtml+xml")
-            .header("Referer", base)
+            .header("Referer", "$origin/")
             .build()
         client.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")

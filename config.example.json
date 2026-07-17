@@ -1,13 +1,69 @@
 {
-  "mirrors": [
-    "https://librepelota.su",
-    "https://pelotalibrehd.su",
-    "https://librepelotatv.net",
-    "https://pelotalibre.watch"
-  ],
-  "agendaPath": "/es/agenda/",
-  "homePath": "/es/",
-  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-  "sourceUtcOffsetMinutes": 60,
-  "targetUtcOffsetMinutes": -180
+  "_comment": "Config remota multi-fuente. Editá esto en tu repo de GitHub para agregar/arreglar/quitar sitios SIN recompilar. strategy: 'menuR' (Familia A: ul.menu + ?r=) o 'rows' (Familia B: fila->detalle->iframe). Si falta 'sources', la app usa sus defaults.",
+  "sources": [
+    {
+      "id": "pelotalibre", "name": "Pelota Libre",
+      "mirrors": ["https://librepelota.su", "https://pelotalibrehd.su", "https://librepelotatv.net", "https://pelotalibre.watch"],
+      "homePath": "/es/", "agendaPath": "/es/agenda/",
+      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": true,
+      "channelCardSelector": "div.cards-container div.card", "channelNameSelector": "h3",
+      "channelLogoSelector": "img", "channelLinkSelector": "a.btn-watch",
+      "strategy": "menuR"
+    },
+    {
+      "id": "futbollibre", "name": "Fútbol Libre TV",
+      "mirrors": ["https://futbol-libres.su"],
+      "homePath": "/", "agendaPath": "/agenda/",
+      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": true,
+      "channelCardSelector": "div.cards-container div.card", "channelNameSelector": "h3",
+      "channelLogoSelector": "img", "channelLinkSelector": "a.btn-watch",
+      "strategy": "menuR"
+    },
+    {
+      "id": "alangulo1", "name": "Al Ángulo TV",
+      "mirrors": ["https://alangulotv.su"],
+      "homePath": "/", "agendaPath": "/agenda2/",
+      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false, "strategy": "menuR"
+    },
+    {
+      "id": "alangulo2", "name": "Al Ángulo TV (2)",
+      "mirrors": ["https://alangulotv2.su"],
+      "homePath": "/", "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false, "strategy": "menuR"
+    },
+    {
+      "id": "rustico", "name": "Rústico TV",
+      "mirrors": ["https://rusticotv.su"],
+      "homePath": "/", "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": true,
+      "channelCardSelector": "div.grid div.card", "channelNameSelector": "h3",
+      "channelLogoSelector": "img", "channelLinkSelector": "a.btn",
+      "strategy": "menuR"
+    },
+    {
+      "id": "rojadirecta", "name": "RojaDirecta",
+      "mirrors": ["https://rojadirecta.st"],
+      "homePath": "/", "agendaPath": "/",
+      "sourceUtcOffsetMinutes": 120, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "rows",
+      "eventRowSelector": "div.match", "eventTimeSelector": "span.time",
+      "eventNameSelector": "span.name", "eventLinkSelector": "div.chans a[href]"
+    },
+    {
+      "id": "tarjetaroja", "name": "Tarjeta Roja TV",
+      "mirrors": ["https://tarjetarojatv.click"],
+      "homePath": "/", "agendaPath": "/",
+      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "rows",
+      "eventRowSelector": "table tr", "eventTimeSelector": "span.t",
+      "eventNameSelector": "td a", "eventLinkSelector": "td a[href]"
+    }
+  ]
 }

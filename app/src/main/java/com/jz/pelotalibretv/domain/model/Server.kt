@@ -10,5 +10,7 @@ package com.jz.pelotalibretv.domain.model
 data class Server(
     val name: String,
     val quality: String,
-    val embedUrl: String
+    val embedUrl: String,
+    /** true (Familia B): [embedUrl] es una página de detalle a resolver (sacar iframe) antes de reproducir. */
+    val needsResolve: Boolean = false
 )

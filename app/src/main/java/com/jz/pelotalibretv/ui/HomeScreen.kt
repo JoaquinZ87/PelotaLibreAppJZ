@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +33,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -38,15 +41,15 @@ import com.jz.pelotalibretv.data.AppConfig
 import com.jz.pelotalibretv.data.EmbedResolver
 import com.jz.pelotalibretv.domain.model.Event
 import com.jz.pelotalibretv.domain.model.Server
+import com.jz.pelotalibretv.domain.model.Source
 import kotlinx.coroutines.launch
 
 private enum class Mode { CANALES, EVENTOS }
 
 /**
- * Pantalla principal con las DOS modalidades: Canales (24/7) y Eventos (agenda del día).
- * - Orientación: reproduciendo = horizontal; navegando = TV horizontal / celular libre.
- * - Foco inicial en el selector (control remoto).
- * - Al elegir un evento con VARIAS señales, muestra un selector de servidor.
+ * Pantalla principal MULTI-FUENTE. Arriba: selector de fuente (PelotaLibre, Fútbol Libre, AlÁngulo…)
+ * y selector de modalidad (Canales/Eventos). Al elegir un evento con varias señales, un selector
+ * de servidor. Reproductor a pantalla completa. Orientación por dispositivo.
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -54,13 +57,27 @@ fun HomeScreen() {
     val context = LocalContext.current
     val isTv = remember { context.isTvDevice() }
     val activity = remember { context.findActivity() }
+    val sources = remember { AppConfig.sources }
 
-    var mode by remember { mutableStateOf(Mode.CANALES) }
+    var selectedSource by remember { mutableStateOf(sources.first()) }
+    var mode by remember {
+        mutableStateOf(if (sources.first().channelsEnabled) Mode.CANALES else Mode.EVENTOS)
+    }
     var playUrl by remember { mutableStateOf<String?>(null) }
     var playReferer by remember { mutableStateOf("") }
     var opening by remember { mutableStateOf(false) }
     var serverPicker by remember { mutableStateOf<Event?>(null) }
     val scope = rememberCoroutineScope()
+
+    val agendaVM: AgendaViewModel = viewModel()
+    val channelsVM: ChannelsViewModel = viewModel()
+
+    // Cambiar de fuente = recargar agenda y canales de esa fuente.
+    LaunchedEffect(selectedSource) {
+        agendaVM.setSource(selectedSource)
+        channelsVM.setSource(selectedSource)
+        if (!selectedSource.channelsEnabled) mode = Mode.EVENTOS
+    }
 
     LaunchedEffect(playUrl, isTv) {
         activity?.requestedOrientation = when {
@@ -76,7 +93,24 @@ fun HomeScreen() {
         return
     }
 
-    val agendaReferer = AppConfig.mirrors.first() + AppConfig.agendaPath
+    val agendaReferer = selectedSource.mirrors.first() + selectedSource.agendaPath
+
+    // Reproduce un servidor. Familia B (needsResolve): baja la página de detalle y saca el iframe.
+    fun playServer(server: Server) {
+        if (server.needsResolve) {
+            opening = true
+            scope.launch {
+                val url = EmbedResolver.resolveChannel(server.embedUrl, selectedSource.userAgent)
+                    ?: server.embedUrl
+                playReferer = server.embedUrl
+                opening = false
+                playUrl = url
+            }
+        } else {
+            playReferer = agendaReferer
+            playUrl = server.embedUrl
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -84,13 +118,16 @@ fun HomeScreen() {
             .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ModeSelector(selected = mode, onSelect = { mode = it })
+            SourceSelector(sources, selectedSource) { selectedSource = it }
+            ModeSelector(mode, selectedSource.channelsEnabled) { mode = it }
             when (mode) {
                 Mode.CANALES -> ChannelsContent(
+                    viewModel = channelsVM,
                     onOpenChannel = { channel ->
                         opening = true
                         scope.launch {
-                            val url = EmbedResolver.resolveChannel(channel.pageUrl) ?: channel.pageUrl
+                            val url = EmbedResolver.resolveChannel(channel.pageUrl, selectedSource.userAgent)
+                                ?: channel.pageUrl
                             playReferer = channel.pageUrl
                             opening = false
                             playUrl = url
@@ -98,12 +135,10 @@ fun HomeScreen() {
                     }
                 )
                 Mode.EVENTOS -> AgendaContent(
+                    viewModel = agendaVM,
                     onPlayEvent = { event ->
                         when {
-                            event.servers.size == 1 -> {
-                                playReferer = agendaReferer
-                                playUrl = event.servers.first().embedUrl
-                            }
+                            event.servers.size == 1 -> playServer(event.servers.first())
                             event.servers.size > 1 -> serverPicker = event
                         }
                     }
@@ -118,11 +153,7 @@ fun HomeScreen() {
                     .background(Color(0xAA000000)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Abriendo…",
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineSmall
-                )
+                Text("Abriendo…", color = Color.White, style = MaterialTheme.typography.headlineSmall)
             }
         }
 
@@ -131,8 +162,7 @@ fun HomeScreen() {
                 event = ev,
                 onPick = { server ->
                     serverPicker = null
-                    playReferer = agendaReferer
-                    playUrl = server.embedUrl
+                    playServer(server)
                 },
                 onDismiss = { serverPicker = null }
             )
@@ -141,28 +171,43 @@ fun HomeScreen() {
 }
 
 @Composable
-private fun ModeSelector(selected: Mode, onSelect: (Mode) -> Unit) {
+private fun SourceSelector(sources: List<Source>, selected: Source, onSelect: (Source) -> Unit) {
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
+    val firstId = sources.firstOrNull()?.id
 
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(sources) { src ->
+            Chip(
+                label = src.name,
+                selected = src.id == selected.id,
+                modifier = if (src.id == firstId) Modifier.focusRequester(firstFocus) else Modifier
+            ) { onSelect(src) }
+        }
+    }
+}
+
+@Composable
+private fun ModeSelector(mode: Mode, channelsEnabled: Boolean, onSelect: (Mode) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 20.dp),
+            .padding(horizontal = 48.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ModeChip("Canales", selected == Mode.CANALES, Modifier.focusRequester(firstFocus)) {
-            onSelect(Mode.CANALES)
-        }
-        ModeChip("Eventos", selected == Mode.EVENTOS, Modifier) {
-            onSelect(Mode.EVENTOS)
-        }
+        if (channelsEnabled) Chip("Canales", mode == Mode.CANALES) { onSelect(Mode.CANALES) }
+        Chip("Eventos", mode == Mode.EVENTOS) { onSelect(Mode.EVENTOS) }
     }
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun ModeChip(
+private fun Chip(
     label: String,
     selected: Boolean,
     modifier: Modifier = Modifier,
@@ -185,7 +230,7 @@ private fun ModeChip(
             .background(bg)
             .onFocusChanged { focused = it.isFocused }
             .clickable { onClick() }
-            .padding(horizontal = 28.dp, vertical = 10.dp)
+            .padding(horizontal = 24.dp, vertical = 8.dp)
     )
 }
 

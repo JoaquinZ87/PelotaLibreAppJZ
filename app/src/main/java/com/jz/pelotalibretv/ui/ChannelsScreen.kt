@@ -36,7 +36,6 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.jz.pelotalibretv.data.AppConfig
 import com.jz.pelotalibretv.domain.model.Channel
 
 /**
@@ -100,7 +99,7 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(channel.logoUrl)
-                .setHeader("Referer", AppConfig.mirrors.first() + "/")
+                .setHeader("Referer", (Regex("^(https?://[^/]+)").find(channel.logoUrl)?.value ?: "") + "/")
                 .crossfade(true)
                 .build(),
             contentDescription = channel.name,

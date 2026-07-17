@@ -1,65 +1,104 @@
 package com.jz.pelotalibretv.data
 
-import com.jz.pelotalibretv.domain.model.Channel
+import com.jz.pelotalibretv.domain.model.Source
 
 /**
- * Config VOLÁTIL del scraping (los DEFAULTS). Todo lo que cambia cuando el sitio se muda vive acá.
- * [RemoteConfig] (M7) PISA estos valores con un JSON remoto al abrir → se arregla una mudanza
- * editando ese JSON, SIN recompilar. Por eso mirrors/paths/userAgent son `var` (no `const`).
- * Regla de oro: nada de dominios/rutas hardcodeados en la lógica; todo sale de acá.
+ * Config por defecto. La lista de FUENTES vive acá y RemoteConfig la PISA con el JSON remoto.
+ *
+ * FASES (para ir sumando fuentes):
+ *  - Fase 1 (Familia A, motor `?r=` + cards): PelotaLibre, Fútbol Libre, AlÁngulo1, AlÁngulo2.
+ *  - Fase 2 (Familia B, agregador fila→detalle→iframe): RojaDirecta y su ecosistema. (Pendiente)
+ *
+ * Zonas horarias base verificadas (jul/2026): PelotaLibre/FutbolLibre/AlÁngulo2 = UTC+1 (60);
+ * AlÁngulo1 = Perú (-300). Todo se muestra en Argentina (-180).
  */
 object AppConfig {
 
-    /**
-     * Dominios espejo, en orden de preferencia. Se prueban en orden hasta que uno
-     * responda con datos. La fuente rota de dominio seguido; esta lista es la defensa.
-     */
-    var mirrors: List<String> = listOf(
-        "https://librepelota.su",
-        "https://pelotalibrehd.su",
-        "https://librepelotatv.net",
-        "https://pelotalibre.watch"
-    )
+    const val refreshIntervalMs = 45_000L
 
-    /** Ruta de la agenda (eventos del día) dentro de cada dominio. */
-    var agendaPath: String = "/es/agenda/"
-
-    /** Ruta de la home (de donde se scrapean los canales 24/7). */
-    var homePath: String = "/es/"
-
-    /** User-Agent de navegador real (evita bloqueos por bot). */
-    var userAgent: String =
+    const val BROWSER_UA =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
             "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
-    /** Cada cuánto se refresca la agenda mientras la pantalla está abierta (ms). */
-    const val refreshIntervalMs = 45_000L
+    private const val PL_CARD = "div.cards-container div.card"
 
-    /**
-     * Zona horaria en que la FUENTE publica las horas de eventos. Verificado jul/2026: UTC+1 (=60).
-     * Ajustable por RemoteConfig ("sourceUtcOffsetMinutes").
-     */
-    var sourceUtcOffsetMinutes = 60
-
-    /**
-     * Zona horaria en la que se MUESTRAN las horas. Fijo Argentina UTC-3 (=-180) para que
-     * siempre se vean bien, sin depender de la zona del dispositivo (el emulador está en horario
-     * de EE.UU.). Ajustable por RemoteConfig ("targetUtcOffsetMinutes").
-     */
-    var targetUtcOffsetMinutes = -180
-
-    /**
-     * Lista de canales por defecto (fallback si el scrape de la home falla).
-     * Son URLs del dominio conocido; si rota, el scrape de la home las corrige solo.
-     */
-    val defaultChannels = listOf(
-        Channel("TyC Sports", "https://cdn.librepelota.su/es/img/tyc_sports.webp", "https://librepelota.su/es/tyc-sports/"),
-        Channel("DirecTV Sports", "https://cdn.librepelota.su/es/img/dsports.webp", "https://librepelota.su/es/directv-sports/"),
-        Channel("TNT Sports", "https://cdn.librepelota.su/es/img/tnt_sport.webp", "https://librepelota.su/es/tnt-sports/"),
-        Channel("ESPN Premium", "https://cdn.librepelota.su/es/img/espn_premium.webp", "https://librepelota.su/es/espn-premium/"),
-        Channel("ESPN", "https://cdn.librepelota.su/es/img/espn1.webp", "https://librepelota.su/es/espn-1/"),
-        Channel("Fox Sports", "https://cdn.librepelota.su/es/img/fox_sports.webp", "https://librepelota.su/es/fox-sports/"),
-        Channel("TUDN", "https://cdn.librepelota.su/es/img/tudn.webp", "https://librepelota.su/es/tudn/"),
-        Channel("Win Sports+", "https://cdn.librepelota.su/es/img/win_sports_plus.webp", "https://librepelota.su/es/win-sports-premium/")
+    @Volatile
+    var sources: List<Source> = listOf(
+        Source(
+            id = "pelotalibre", name = "Pelota Libre",
+            mirrors = listOf(
+                "https://librepelota.su", "https://pelotalibrehd.su",
+                "https://librepelotatv.net", "https://pelotalibre.watch"
+            ),
+            homePath = "/es/", agendaPath = "/es/agenda/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
+            channelsEnabled = true,
+            channelCardSelector = PL_CARD, channelNameSelector = "h3",
+            channelLogoSelector = "img", channelLinkSelector = "a.btn-watch"
+        ),
+        Source(
+            id = "futbollibre", name = "Fútbol Libre TV",
+            mirrors = listOf("https://futbol-libres.su"),
+            homePath = "/", agendaPath = "/agenda/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
+            channelsEnabled = true,
+            channelCardSelector = PL_CARD, channelNameSelector = "h3",
+            channelLogoSelector = "img", channelLinkSelector = "a.btn-watch"
+        ),
+        Source(
+            id = "alangulo1", name = "Al Ángulo TV",
+            mirrors = listOf("https://alangulotv.su"),
+            homePath = "/", agendaPath = "/agenda2/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // base Perú
+            channelsEnabled = false,
+            channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
+            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+        ),
+        Source(
+            id = "alangulo2", name = "Al Ángulo TV (2)",
+            mirrors = listOf("https://alangulotv2.su"),
+            homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
+            channelsEnabled = false,
+            channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
+            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+        ),
+        Source(
+            id = "rustico", name = "Rústico TV",
+            mirrors = listOf("https://rusticotv.su"),
+            homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
+            channelsEnabled = true, // sus tarjetas ya traen link ?r= directo (la14hd.com)
+            channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
+            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+        ),
+        // --- Familia B (agregador: fila -> página de detalle -> iframe) ---
+        Source(
+            id = "rojadirecta", name = "RojaDirecta",
+            mirrors = listOf("https://rojadirecta.st"),
+            homePath = "/", agendaPath = "/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 120, targetUtcOffsetMinutes = -180, // base España (verano UTC+2)
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "rows",
+            eventRowSelector = "div.match", eventTimeSelector = "span.time",
+            eventNameSelector = "span.name", eventLinkSelector = "div.chans a[href]"
+        ),
+        Source(
+            id = "tarjetaroja", name = "Tarjeta Roja TV",
+            mirrors = listOf("https://tarjetarojatv.click"),
+            homePath = "/", agendaPath = "/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // base UTC-5
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "rows",
+            eventRowSelector = "table tr", eventTimeSelector = "span.t",
+            eventNameSelector = "td a", eventLinkSelector = "td a[href]"
+        )
     )
+
+    /** Fuente por defecto al abrir. */
+    val defaultSource: Source get() = sources.first()
 }

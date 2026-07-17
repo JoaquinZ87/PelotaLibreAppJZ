@@ -2,6 +2,7 @@ package com.jz.pelotalibretv.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.jz.pelotalibretv.domain.model.Source
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -10,18 +11,17 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /**
- * Config remota (M7). La app baja un JSON de GitHub al abrir y PISA los valores por defecto
- * de [AppConfig] (dominios, rutas, user-agent). Así, cuando el sitio se muda de dominio,
+ * Config remota (M7). La app baja un config.json de GitHub al abrir y PISA la lista de FUENTES
+ * de [AppConfig]. Así, cuando un sitio se muda / cambia un selector / se suma una fuente nueva,
  * se edita ESE JSON y la app se arregla sola, SIN recompilar ni reinstalar.
  *
  * - Nunca falla: si no puede bajar/parsear, se queda con lo último bueno (cache) o los defaults.
- * - Cachea el último JSON bueno en SharedPreferences (sobrevive reinicios / sin internet).
+ * - Cachea el último JSON bueno en SharedPreferences (sobrevive offline).
  *
  * >>> [CONFIG_URL] es lo ÚNICO hardcodeado: la URL "raw" del config.json en GitHub. <<<
  */
 object RemoteConfig {
 
-    // OJO: si tu usuario/repo de GitHub es distinto, avisá y lo cambio.
     const val CONFIG_URL =
         "https://raw.githubusercontent.com/JoaquinZ87/pelotalibretv-config/main/config.json"
 
@@ -58,26 +58,43 @@ object RemoteConfig {
         }
     }
 
-    /** Aplica el JSON a AppConfig. Devuelve true si parseó ok. */
+    /** Parsea el JSON y pisa AppConfig.sources. Devuelve true si obtuvo al menos una fuente. */
     private fun applyJson(json: String): Boolean = runCatching {
-        val obj = JSONObject(json)
-        obj.optJSONArray("mirrors")?.let { arr ->
-            val list = (0 until arr.length())
-                .map { arr.optString(it).trim() }
+        val arr = JSONObject(json).optJSONArray("sources") ?: return@runCatching false
+        val list = mutableListOf<Source>()
+        for (i in 0 until arr.length()) {
+            val o = arr.optJSONObject(i) ?: continue
+            val mirrorsArr = o.optJSONArray("mirrors") ?: continue
+            val mirrors = (0 until mirrorsArr.length())
+                .map { mirrorsArr.optString(it).trim() }
                 .filter { it.startsWith("http") }
-            if (list.isNotEmpty()) AppConfig.mirrors = list
+            if (mirrors.isEmpty()) continue
+            list += Source(
+                id = o.optString("id", "src$i"),
+                name = o.optString("name", "Fuente ${i + 1}"),
+                mirrors = mirrors,
+                homePath = o.optString("homePath", "/"),
+                agendaPath = o.optString("agendaPath", "/agenda/"),
+                userAgent = o.optString("userAgent", AppConfig.BROWSER_UA),
+                sourceUtcOffsetMinutes = o.optInt("sourceUtcOffsetMinutes", 60),
+                targetUtcOffsetMinutes = o.optInt("targetUtcOffsetMinutes", -180),
+                channelsEnabled = o.optBoolean("channelsEnabled", false),
+                channelCardSelector = o.optString("channelCardSelector", "div.cards-container div.card"),
+                channelNameSelector = o.optString("channelNameSelector", "h3"),
+                channelLogoSelector = o.optString("channelLogoSelector", "img"),
+                channelLinkSelector = o.optString("channelLinkSelector", "a.btn-watch"),
+                strategy = o.optString("strategy", "menuR"),
+                eventRowSelector = o.optString("eventRowSelector", ""),
+                eventTimeSelector = o.optString("eventTimeSelector", ""),
+                eventNameSelector = o.optString("eventNameSelector", ""),
+                eventLinkSelector = o.optString("eventLinkSelector", "")
+            )
         }
-        obj.optString("agendaPath").takeIf { it.isNotBlank() }?.let { AppConfig.agendaPath = it }
-        obj.optString("homePath").takeIf { it.isNotBlank() }?.let { AppConfig.homePath = it }
-        obj.optString("userAgent").takeIf { it.isNotBlank() }?.let { AppConfig.userAgent = it }
-        if (obj.has("sourceUtcOffsetMinutes")) {
-            AppConfig.sourceUtcOffsetMinutes =
-                obj.optInt("sourceUtcOffsetMinutes", AppConfig.sourceUtcOffsetMinutes)
+        if (list.isNotEmpty()) {
+            AppConfig.sources = list
+            true
+        } else {
+            false
         }
-        if (obj.has("targetUtcOffsetMinutes")) {
-            AppConfig.targetUtcOffsetMinutes =
-                obj.optInt("targetUtcOffsetMinutes", AppConfig.targetUtcOffsetMinutes)
-        }
-        true
     }.getOrDefault(false)
 }

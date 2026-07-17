@@ -6,26 +6,31 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 
 /**
- * Resuelve la URL del reproductor (embed) de una página de canal.
- * La página del canal trae un <iframe> al player, ej:
- *   https://latamvidz1.com/canal.php?stream=tycsports
- * Elegimos el iframe que parece player (canal.php / stream=) y descartamos los de ads.
+ * Resuelve la URL del embed (reproductor) a partir del link de un canal. Auto-detecta 2 patrones:
+ *  1) el link YA es un `?r=BASE64` (canal directo, ej Rústico) -> se decodifica.
+ *  2) el link es una página de canal (ej PelotaLibre `/es/espn-1/`) -> se baja y se saca el iframe.
  */
 object EmbedResolver {
 
-    private val playerMarkers = listOf("canal.php", "stream=", "/embed", "reproductor", "player")
-    private val adHints = listOf("ads", "aclib", "acscdn", "doubleclick", "pop")
+    private val playerMarkers = listOf(
+        "canal.php", "global1.php", "live1.php", "canales.php",
+        "embed.php", "embedhd", "playcapo", "rodrixtv", "/tv/",
+        "stream=", "/embed", "reproductor", "player"
+    )
+    private val adHints = listOf("ads", "aclib", "acscdn", "doubleclick", "pop", "banner")
 
     suspend fun resolveChannel(
-        channelPageUrl: String,
+        pageUrl: String,
+        userAgent: String = AppConfig.BROWSER_UA,
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ): String? = withContext(ioDispatcher) {
-        val html = runCatching { SiteHttp.get(channelPageUrl) }.getOrNull() ?: return@withContext null
-        val doc = Jsoup.parse(html, channelPageUrl)
-        val iframes = doc.select("iframe[src]")
+        // 1) link ?r= directo
+        EmbedDecoder.fromHref(pageUrl)?.let { return@withContext it }
+        // 2) página de canal -> iframe del player
+        val html = runCatching { SiteHttp.get(pageUrl, userAgent) }.getOrNull() ?: return@withContext null
+        val iframes = Jsoup.parse(html, pageUrl).select("iframe[src]")
             .map { it.attr("abs:src") }
-            .filter { it.isNotBlank() && adHints.none { hint -> it.contains(hint, ignoreCase = true) } }
-
+            .filter { it.isNotBlank() && adHints.none { h -> it.contains(h, ignoreCase = true) } }
         iframes.firstOrNull { src -> playerMarkers.any { src.contains(it, ignoreCase = true) } }
             ?: iframes.firstOrNull()
     }
