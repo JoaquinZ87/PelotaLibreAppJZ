@@ -27,7 +27,10 @@ object SiteHttp {
         var current = url
         repeat(4) {
             val html = rawGet(current, userAgent)
-            val next = redirectTarget(html)
+            // Solo seguimos meta/JS en páginas CHICAS (stubs de redirección). Las páginas con
+            // contenido real (agenda/canales) son grandes y se devuelven tal cual, así un
+            // location.href benigno adentro de una página con datos no la desvía.
+            val next = if (html.length < 4000) redirectTarget(html) else null
             if (next == null || next == current) return html
             current = next
         }
