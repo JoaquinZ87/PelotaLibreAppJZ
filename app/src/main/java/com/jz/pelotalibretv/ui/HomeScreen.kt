@@ -39,6 +39,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.jz.pelotalibretv.data.AppConfig
 import com.jz.pelotalibretv.data.EmbedResolver
+import com.jz.pelotalibretv.data.UpdateChecker
+import com.jz.pelotalibretv.data.UpdateInfo
+import com.jz.pelotalibretv.data.Updater
 import com.jz.pelotalibretv.domain.model.Event
 import com.jz.pelotalibretv.domain.model.Server
 import com.jz.pelotalibretv.domain.model.Source
@@ -67,7 +70,18 @@ fun HomeScreen() {
     var playReferer by remember { mutableStateOf("") }
     var opening by remember { mutableStateOf(false) }
     var serverPicker by remember { mutableStateOf<Event?>(null) }
+    var update by remember { mutableStateOf<UpdateInfo?>(null) }
+    var updating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // Chequeo de actualización al abrir.
+    LaunchedEffect(Unit) {
+        val vc = runCatching {
+            val pi = context.packageManager.getPackageInfo(context.packageName, 0)
+            androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pi).toInt()
+        }.getOrDefault(0)
+        update = UpdateChecker.check(vc)
+    }
 
     val agendaVM: AgendaViewModel = viewModel()
     val channelsVM: ChannelsViewModel = viewModel()
@@ -166,6 +180,76 @@ fun HomeScreen() {
                 },
                 onDismiss = { serverPicker = null }
             )
+        }
+
+        update?.let { info ->
+            UpdateDialog(
+                info = info,
+                updating = updating,
+                onUpdate = {
+                    updating = true
+                    scope.launch {
+                        val ok = Updater.downloadAndInstall(context, info.apkUrl)
+                        if (!ok) updating = false
+                    }
+                },
+                onDismiss = { update = null }
+            )
+        }
+    }
+}
+
+/** Diálogo de "hay una versión nueva". */
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun UpdateDialog(
+    info: UpdateInfo,
+    updating: Boolean,
+    onUpdate: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    BackHandler(onBack = { if (!updating) onDismiss() })
+    val firstFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xCC000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 560.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(28.dp)
+        ) {
+            Text(
+                text = "Actualización disponible",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Versión ${info.versionName}" +
+                    if (info.notes.isNotBlank()) "\n\n${info.notes}" else "",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(20.dp))
+            if (updating) {
+                Text(
+                    text = "Descargando…",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Chip("Actualizar", selected = true, modifier = Modifier.focusRequester(firstFocus)) { onUpdate() }
+                    Chip("Ahora no", selected = false) { onDismiss() }
+                }
+            }
         }
     }
 }
