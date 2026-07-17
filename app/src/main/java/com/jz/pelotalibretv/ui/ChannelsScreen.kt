@@ -49,11 +49,12 @@ fun ChannelsContent(
     viewModel: ChannelsViewModel = viewModel()
 ) {
     val channels by viewModel.channels.collectAsState()
+    val loading by viewModel.loading.collectAsState()
 
     if (channels.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = "Cargando canales…",
+                text = if (loading) "Cargando canales…" else "Esta fuente no tiene canales (probá Eventos).",
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.headlineSmall
             )

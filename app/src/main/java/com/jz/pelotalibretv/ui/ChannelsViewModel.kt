@@ -12,12 +12,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Canales de la fuente seleccionada. [setSource] recarga la lista al cambiar de fuente.
+ * Canales de la fuente seleccionada. Expone [loading] además de [channels] para distinguir
+ * "cargando" de "vacío" (antes se quedaba en "Cargando…" para siempre si no había canales).
  */
 class ChannelsViewModel : ViewModel() {
 
     private val _channels = MutableStateFlow<List<Channel>>(emptyList())
     val channels: StateFlow<List<Channel>> = _channels.asStateFlow()
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
     private var currentId: String? = null
 
@@ -25,9 +29,11 @@ class ChannelsViewModel : ViewModel() {
         if (source.id == currentId) return
         currentId = source.id
         _channels.value = emptyList()
+        _loading.value = source.channelsEnabled
         viewModelScope.launch {
             RemoteConfig.ensureFresh()
             _channels.value = ChannelScraper(source).fetchChannels()
+            _loading.value = false
         }
     }
 }
