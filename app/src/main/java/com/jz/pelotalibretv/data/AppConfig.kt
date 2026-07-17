@@ -65,10 +65,10 @@ object AppConfig {
         ),
         Source(
             id = "rustico", name = "Rústico TV",
-            mirrors = listOf("https://rusticotv.su"),
+            mirrors = listOf("https://mirusticotv.su", "https://rusticotv.su"),
             homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
             sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
-            channelsEnabled = true, // sus tarjetas ya traen link ?r= directo (la14hd.com)
+            channelsEnabled = false, // en la home las tarjetas linkean a "/" (no reproducen)
             channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
             channelLogoSelector = "img", channelLinkSelector = "a.btn"
         ),

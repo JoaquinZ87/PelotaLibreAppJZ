@@ -37,12 +37,10 @@
     },
     {
       "id": "rustico", "name": "Rústico TV",
-      "mirrors": ["https://rusticotv.su"],
+      "mirrors": ["https://mirusticotv.su", "https://rusticotv.su"],
       "homePath": "/", "agendaPath": "/agenda.php",
       "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": true,
-      "channelCardSelector": "div.grid div.card", "channelNameSelector": "h3",
-      "channelLogoSelector": "img", "channelLinkSelector": "a.btn",
+      "channelsEnabled": false,
       "strategy": "menuR"
     },
     {

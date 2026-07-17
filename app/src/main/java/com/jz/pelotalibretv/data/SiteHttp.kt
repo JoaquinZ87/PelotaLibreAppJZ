@@ -5,20 +5,36 @@ import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
 /**
- * Cliente HTTP único + GET con headers de navegador. El User-Agent y el Referer (origin del sitio)
- * se adaptan a cada fuente. Body one-shot -> siempre .use { }.
+ * Cliente HTTP único + GET con headers de navegador. Sigue redirecciones HTTP (OkHttp por defecto)
+ * y ADEMÁS meta-refresh / JS (location.href) — común cuando un dominio viejo manda al nuevo.
+ * El User-Agent y el Referer se adaptan a cada fuente. Body one-shot -> siempre .use { }.
  */
 object SiteHttp {
 
     val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
-        .build()
+        .build() // followRedirects = true por defecto (301/302)
 
     private val ORIGIN = Regex("^(https?://[^/]+)")
+    private val META_REFRESH =
+        Regex("""(?i)<meta[^>]+http-equiv\s*=\s*["']?refresh["']?[^>]*content\s*=\s*["'][^"']*url\s*=\s*([^"'\s>]+)""")
+    private val JS_LOCATION =
+        Regex("""(?i)(?:window\.)?location(?:\.href|\.replace)?\s*[=(]\s*["'](https?://[^"']+)["']""")
 
-    /** GET simple. Lanza excepción si no es 2xx. */
+    /** GET siguiendo hasta 4 saltos de redirección (HTTP + meta/JS). Lanza excepción si no es 2xx. */
     fun get(url: String, userAgent: String = AppConfig.BROWSER_UA): String {
+        var current = url
+        repeat(4) {
+            val html = rawGet(current, userAgent)
+            val next = redirectTarget(html)
+            if (next == null || next == current) return html
+            current = next
+        }
+        return rawGet(current, userAgent)
+    }
+
+    private fun rawGet(url: String, userAgent: String): String {
         val origin = ORIGIN.find(url)?.value ?: url
         val req = Request.Builder()
             .url(url)
@@ -31,5 +47,12 @@ object SiteHttp {
             if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
             return resp.body?.string().orEmpty()
         }
+    }
+
+    /** Detecta redirección por meta-refresh o JS (solo a URLs absolutas http(s)). */
+    private fun redirectTarget(html: String): String? {
+        META_REFRESH.find(html)?.groupValues?.get(1)?.trim()
+            ?.let { if (it.startsWith("http")) return it }
+        return JS_LOCATION.find(html)?.groupValues?.get(1)?.trim()
     }
 }
