@@ -337,7 +337,7 @@ auto-update lo haga solo.
 **los lunes 12:00 UTC (9:00 ART)** en la nube, con el repo `pelotalibretv-config` clonado. Revisa cada
 fuente del `config.json` (baja la agenda con `curl -skL`, clasifica OK / caída / incautada / rediseñada /
 bloqueada-por-Cloudflare), y si algo se rompió **busca el dominio nuevo o re-deriva selectores y commitea
-el `config.json` sola**, avisando por un **borrador de Gmail** a joaquinz@gmail.com. Solo toca
+el `config.json` sola**, avisando por **Telegram** (bot propio → chat de Joaquín). Solo toca
 `config.json`; una estructura nueva que no encaje en `menuR`/`menu2`/`rows` la marca como
 "NECESITA CAMBIO DE CÓDIGO" (eso sí requiere un humano). Gestión/edición de la rutina:
 https://claude.ai/code/routines (id `trig_018CSjpDQmmEimgJDZJYHws5`).
