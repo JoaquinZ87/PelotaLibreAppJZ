@@ -162,6 +162,14 @@ Hay **dos familias** de sitio, distinguidas por `Source.strategy`:
 usa `ul.menu / li.subitem1 / span.t`; otra usa `submenu-item / channel / match-item / schedule`.
 El patrón `?r=<base64>` es lo estable. Validar que el base64 decodifica a un `http(s)://`.
 
+### Familia A rediseñada — `strategy = "menu2"` (PelotaLibre desde 2026)
+
+Pelota Libre (`pelotalibrehd.su`) se rediseñó: misma idea (`?r=` base64) pero otro HTML. Eventos
+en `ul#menu > li`; cada `li` tiene un `div.info` con `<span>` (título) y `<time datetime="HH:MM:SS">`
+(hora), y `ul.submenu a[href*="?r="]` con las señales. Lo maneja `AgendaScraper.parseMenu2`.
+**Ojo: publica en hora de Perú (UTC-5, `-300`)**, NO en UTC+1 como la versión vieja (se detectó
+cruzando los horarios crudos con AlÁngulo1, que también es Perú).
+
 ### Familia B — `strategy = "rows"` (RojaDirecta, Tarjeta Roja)
 
 Agregadores: la agenda es una lista de **filas** de partido, y cada link **NO** es el embed sino una
@@ -324,6 +332,15 @@ adb logcat -s PelotaLibre                # logs de la app
 
 Distribución sin PC: bajar el APK en el box con la app **Downloader** (AFTVnews), o dejar que el
 auto-update lo haga solo.
+
+**Mantenimiento automático (rutina semanal en la nube):** hay una *routine* de Claude Code que corre
+**los lunes 12:00 UTC (9:00 ART)** en la nube, con el repo `pelotalibretv-config` clonado. Revisa cada
+fuente del `config.json` (baja la agenda con `curl -skL`, clasifica OK / caída / incautada / rediseñada /
+bloqueada-por-Cloudflare), y si algo se rompió **busca el dominio nuevo o re-deriva selectores y commitea
+el `config.json` sola**, avisando por un **borrador de Gmail** a joaquinz@gmail.com. Solo toca
+`config.json`; una estructura nueva que no encaje en `menuR`/`menu2`/`rows` la marca como
+"NECESITA CAMBIO DE CÓDIGO" (eso sí requiere un humano). Gestión/edición de la rutina:
+https://claude.ai/code/routines (id `trig_018CSjpDQmmEimgJDZJYHws5`).
 
 ---
 
