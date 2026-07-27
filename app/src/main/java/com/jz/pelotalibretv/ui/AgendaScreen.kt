@@ -111,9 +111,10 @@ private fun EventRow(event: Event, onClick: () -> Unit) {
         )
         Text(
             text = if (hasSignal) {
-                event.servers.joinToString("   ·   ") {
+                val list = event.servers.joinToString("   ·   ") {
                     if (it.quality.isNotEmpty()) "${it.name} (${it.quality})" else it.name
                 }
+                if (event.servers.size > 1) "▸ ${event.servers.size} señales:   $list" else list
             } else {
                 "Sin señal disponible aún"
             },

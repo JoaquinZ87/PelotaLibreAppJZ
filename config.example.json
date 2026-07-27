@@ -3,6 +3,13 @@
   "sources": [
     {
       "id": "pelotalibre", "name": "Pelota Libre",
+      "mirrors": ["https://pelotalibrehd.su"],
+      "homePath": "/es/", "agendaPath": "/es/agenda/",
+      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false, "strategy": "menu2"
+    },
+    {
+      "id": "pelotalibremas", "name": "Pelota Libre +",
       "mirrors": ["https://pelotalibre-hd.su"],
       "homePath": "/", "agendaPath": "/agenda2/",
       "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,

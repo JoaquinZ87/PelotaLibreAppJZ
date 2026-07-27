@@ -22,9 +22,19 @@ object AppConfig {
     var sources: List<Source> = listOf(
         Source(
             id = "pelotalibre", name = "Pelota Libre",
+            mirrors = listOf("https://pelotalibrehd.su"),
+            homePath = "/es/", agendaPath = "/es/agenda/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // menu2: varias señales/evento (Perú)
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "menu2"
+        ),
+        Source(
+            id = "pelotalibremas", name = "Pelota Libre +",
             mirrors = listOf("https://pelotalibre-hd.su"),
             homePath = "/", agendaPath = "/agenda2/", userAgent = BROWSER_UA,
-            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // base Perú
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // menuR: más eventos, 1 señal (Perú)
             channelsEnabled = false,
             channelCardSelector = "div.cards-container div.card", channelNameSelector = "h3",
             channelLogoSelector = "img", channelLinkSelector = "a.btn-watch",

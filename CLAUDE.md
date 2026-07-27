@@ -170,10 +170,13 @@ en `ul#menu > li`; cada `li` tiene un `div.info` con `<span>` (título) y `<time
 **Ojo: publica en hora de Perú (UTC-5, `-300`)**, NO en UTC+1 como la versión vieja (se detectó
 cruzando los horarios crudos con AlÁngulo1, que también es Perú).
 
-> **La fuente ACTIVA de Pelota Libre** (jul/2026) NO es esa: apunta a `pelotalibre-hd.su` (con
-> guión), cuya agenda vive en `/agenda2/` y es **`menuR` clásico** (`ul.menu` + `eventos.html?r=`),
-> el mismo frontend que AlÁngulo1 — más probado y con más eventos. El `menu2` de `pelotalibrehd.su`
-> (sin guión) queda documentado como variante por si ese frontend vuelve a ser el principal.
+> **Pelota Libre son DOS fuentes** (jul/2026), porque cada frontend tiene una ventaja:
+> - **"Pelota Libre"** = `pelotalibrehd.su` (sin guión, **`menu2`**, `/es/agenda/`): **3-4 señales por
+>   evento** → el `ServerPicker` deja cambiar de señal si una anda lenta.
+> - **"Pelota Libre +"** = `pelotalibre-hd.su` (con guión, **`menuR`** clásico, `/agenda2/`, agenda en
+>   iframe): **más eventos** pero 1 señal cada uno.
+>
+> Los dos publican en **hora de Perú (`-300`)**.
 
 ### Familia B — `strategy = "rows"` (RojaDirecta, Tarjeta Roja)
 

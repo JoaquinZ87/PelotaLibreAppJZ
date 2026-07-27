@@ -70,6 +70,8 @@ fun HomeScreen() {
     var playReferer by remember { mutableStateOf("") }
     var opening by remember { mutableStateOf(false) }
     var serverPicker by remember { mutableStateOf<Event?>(null) }
+    var activeEvent by remember { mutableStateOf<Event?>(null) }    // evento multi-señal en curso (para volver al selector con Atrás)
+    var currentServer by remember { mutableStateOf<Server?>(null) } // señal en uso (para marcarla en el selector)
     var update by remember { mutableStateOf<UpdateInfo?>(null) }
     var updating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -103,7 +105,16 @@ fun HomeScreen() {
 
     val currentUrl = playUrl
     if (currentUrl != null) {
-        PlayerScreen(embedUrl = currentUrl, referer = playReferer, onBack = { playUrl = null })
+        PlayerScreen(
+            embedUrl = currentUrl,
+            referer = playReferer,
+            onBack = {
+                playUrl = null
+                // Si el evento tenía varias señales, Atrás vuelve al selector para cambiar de señal.
+                val ev = activeEvent
+                if (ev != null && ev.servers.size > 1) serverPicker = ev
+            }
+        )
         return
     }
 
@@ -111,6 +122,7 @@ fun HomeScreen() {
 
     // Reproduce un servidor. Familia B (needsResolve): baja la página de detalle y saca el iframe.
     fun playServer(server: Server) {
+        currentServer = server
         if (server.needsResolve) {
             opening = true
             scope.launch {
@@ -152,8 +164,8 @@ fun HomeScreen() {
                     viewModel = agendaVM,
                     onPlayEvent = { event ->
                         when {
-                            event.servers.size == 1 -> playServer(event.servers.first())
-                            event.servers.size > 1 -> serverPicker = event
+                            event.servers.size == 1 -> { activeEvent = null; playServer(event.servers.first()) }
+                            event.servers.size > 1 -> { activeEvent = event; serverPicker = event }
                         }
                     }
                 )
@@ -174,11 +186,12 @@ fun HomeScreen() {
         serverPicker?.let { ev ->
             ServerPicker(
                 event = ev,
+                current = currentServer,
                 onPick = { server ->
                     serverPicker = null
                     playServer(server)
                 },
-                onDismiss = { serverPicker = null }
+                onDismiss = { serverPicker = null; activeEvent = null }
             )
         }
 
@@ -278,14 +291,24 @@ private fun SourceSelector(sources: List<Source>, selected: Source, onSelect: (S
 
 @Composable
 private fun ModeSelector(mode: Mode, channelsEnabled: Boolean, onSelect: (Mode) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        if (channelsEnabled) Chip("Canales", mode == Mode.CANALES) { onSelect(Mode.CANALES) }
-        Chip("Eventos", mode == Mode.EVENTOS) { onSelect(Mode.EVENTOS) }
+    // Nivel subordinado a las fuentes: separador sutil + fila centrada.
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 48.dp)
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 48.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
+        ) {
+            if (channelsEnabled) Chip("Canales", mode == Mode.CANALES) { onSelect(Mode.CANALES) }
+            Chip("Eventos", mode == Mode.EVENTOS) { onSelect(Mode.EVENTOS) }
+        }
     }
 }
 
@@ -318,13 +341,21 @@ private fun Chip(
     )
 }
 
-/** Selector de servidor: se muestra cuando un evento tiene más de una señal. */
+/**
+ * Selector de señal: aparece cuando un evento tiene más de una. También es la pantalla a la que
+ * vuelve el botón Atrás desde el reproductor (para cambiar de señal si una anda lenta). Marca la
+ * que se está usando y arranca el foco sobre una alternativa.
+ */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun ServerPicker(event: Event, onPick: (Server) -> Unit, onDismiss: () -> Unit) {
+private fun ServerPicker(event: Event, current: Server?, onPick: (Server) -> Unit, onDismiss: () -> Unit) {
     BackHandler(onBack = onDismiss)
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
+
+    fun isCurrent(s: Server) = current != null && s.embedUrl == current.embedUrl && s.name == current.name
+    // Foco inicial en la primera señal distinta a la que ya se está usando (para cambiar rápido).
+    val focusIndex = event.servers.indexOfFirst { !isCurrent(it) }.let { if (it < 0) 0 else it }
 
     Box(
         modifier = Modifier
@@ -346,7 +377,7 @@ private fun ServerPicker(event: Event, onPick: (Server) -> Unit, onDismiss: () -
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Elegí una señal:",
+                text = if (current != null) "Elegí o cambiá la señal:" else "Elegí una señal:",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -354,7 +385,8 @@ private fun ServerPicker(event: Event, onPick: (Server) -> Unit, onDismiss: () -
             event.servers.forEachIndexed { i, server ->
                 ServerButton(
                     server = server,
-                    modifier = if (i == 0) Modifier.focusRequester(firstFocus) else Modifier,
+                    inUse = isCurrent(server),
+                    modifier = if (i == focusIndex) Modifier.focusRequester(firstFocus) else Modifier,
                     onClick = { onPick(server) }
                 )
                 if (i < event.servers.size - 1) Spacer(Modifier.height(10.dp))
@@ -365,7 +397,7 @@ private fun ServerPicker(event: Event, onPick: (Server) -> Unit, onDismiss: () -
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun ServerButton(server: Server, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun ServerButton(server: Server, inUse: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val bg = if (focused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
     val fg = if (focused) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -379,7 +411,11 @@ private fun ServerButton(server: Server, modifier: Modifier = Modifier, onClick:
             .clickable { onClick() }
             .padding(horizontal = 20.dp, vertical = 14.dp)
     ) {
-        Text(text = server.name, color = fg, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = if (inUse) "${server.name}   · en uso" else server.name,
+            color = fg,
+            style = MaterialTheme.typography.titleMedium
+        )
         if (server.quality.isNotEmpty()) {
             Text(
                 text = server.quality,
