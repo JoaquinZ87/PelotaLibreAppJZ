@@ -50,6 +50,15 @@ object AppConfig {
             channelLogoSelector = "img", channelLinkSelector = "a.btn"
         ),
         Source(
+            id = "alangulo2", name = "Al Ángulo TV (2)",
+            mirrors = listOf("https://alangulotv2.su"),
+            homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
+            channelsEnabled = false,
+            channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
+            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+        ),
+        Source(
             id = "rustico", name = "Rústico TV",
             mirrors = listOf("https://mirusticotv.su", "https://rusticotv.su"),
             homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
@@ -69,15 +78,6 @@ object AppConfig {
             strategy = "rows",
             eventRowSelector = "div.match", eventTimeSelector = "span.time",
             eventNameSelector = "span.name", eventLinkSelector = "div.chans a[href]"
-        ),
-        Source(
-            id = "alangulo2", name = "Al Ángulo TV (2)",
-            mirrors = listOf("https://alangulotv2.su"),
-            homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
-            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
-            channelsEnabled = false,
-            channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
-            channelLogoSelector = "img", channelLinkSelector = "a.btn"
         )
     )
 
