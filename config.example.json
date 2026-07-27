@@ -1,12 +1,12 @@
 {
-  "_comment": "Config remota multi-fuente. Editá esto en tu repo de GitHub para agregar/arreglar/quitar sitios SIN recompilar. strategy: 'menuR' (Familia A: ul.menu + ?r=) o 'rows' (Familia B: fila->detalle->iframe). Si falta 'sources', la app usa sus defaults.",
+  "_comment": "Config remota multi-fuente. Editá esto en tu repo de GitHub para agregar/arreglar/quitar sitios SIN recompilar. strategy: 'menuR' (Familia A: ul.menu + ?r=), 'menu2' (Familia A rediseñada: ul#menu + div.info + ul.submenu) o 'rows' (Familia B: fila->detalle->iframe). Si falta 'sources', la app usa sus defaults.",
   "sources": [
     {
       "id": "pelotalibre", "name": "Pelota Libre",
-      "mirrors": ["https://librepelota.su", "https://pelotalibrehd.su", "https://librepelotatv.net", "https://pelotalibre.watch"],
-      "homePath": "/es/", "agendaPath": "/es/agenda/",
-      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": true,
+      "mirrors": ["https://pelotalibre-hd.su"],
+      "homePath": "/", "agendaPath": "/agenda2/",
+      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
       "channelCardSelector": "div.cards-container div.card", "channelNameSelector": "h3",
       "channelLogoSelector": "img", "channelLinkSelector": "a.btn-watch",
       "strategy": "menuR"

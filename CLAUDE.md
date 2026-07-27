@@ -170,6 +170,11 @@ en `ul#menu > li`; cada `li` tiene un `div.info` con `<span>` (título) y `<time
 **Ojo: publica en hora de Perú (UTC-5, `-300`)**, NO en UTC+1 como la versión vieja (se detectó
 cruzando los horarios crudos con AlÁngulo1, que también es Perú).
 
+> **La fuente ACTIVA de Pelota Libre** (jul/2026) NO es esa: apunta a `pelotalibre-hd.su` (con
+> guión), cuya agenda vive en `/agenda2/` y es **`menuR` clásico** (`ul.menu` + `eventos.html?r=`),
+> el mismo frontend que AlÁngulo1 — más probado y con más eventos. El `menu2` de `pelotalibrehd.su`
+> (sin guión) queda documentado como variante por si ese frontend vuelve a ser el principal.
+
 ### Familia B — `strategy = "rows"` (RojaDirecta, Tarjeta Roja)
 
 Agregadores: la agenda es una lista de **filas** de partido, y cada link **NO** es el embed sino una
