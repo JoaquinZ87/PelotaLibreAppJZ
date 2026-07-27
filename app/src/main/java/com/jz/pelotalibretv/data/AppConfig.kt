@@ -21,6 +21,16 @@ object AppConfig {
     @Volatile
     var sources: List<Source> = listOf(
         Source(
+            id = "pelotalibre", name = "Pelota Libre",
+            mirrors = listOf("https://pelotalibrehd.su", "https://pelotalibre.watch"),
+            homePath = "/es/", agendaPath = "/es/agenda/", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // rediseño 2026: base Perú
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "menu2"
+        ),
+        Source(
             id = "alangulo1", name = "Al Ángulo TV",
             mirrors = listOf("https://alangulotv.su"),
             homePath = "/", agendaPath = "/agenda2/", userAgent = BROWSER_UA,

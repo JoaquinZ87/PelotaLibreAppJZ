@@ -31,8 +31,42 @@ class AgendaScraper(
         if (reachedAny) emptyList() else null
     }
 
-    fun parse(html: String, baseUrl: String): List<Event> =
-        if (source.strategy == "rows") parseRows(html, baseUrl) else parseMenu(html, baseUrl)
+    fun parse(html: String, baseUrl: String): List<Event> = when (source.strategy) {
+        "rows" -> parseRows(html, baseUrl)
+        "menu2" -> parseMenu2(html, baseUrl)
+        else -> parseMenu(html, baseUrl)
+    }
+
+    /**
+     * Familia A rediseñada (PelotaLibre 2026): ul#menu > li con div.info (título en span,
+     * hora en <time datetime>) y ul.submenu con los links ?r=.
+     */
+    private fun parseMenu2(html: String, baseUrl: String): List<Event> {
+        val doc = Jsoup.parse(html, baseUrl)
+        val events = mutableListOf<Event>()
+        for (li in doc.select("ul#menu > li")) {
+            runCatching {
+                val info = li.selectFirst(".info") ?: return@runCatching
+                val title = info.selectFirst("span")?.text()?.trim().orEmpty()
+                if (title.isEmpty()) return@runCatching
+                val rawTime = info.selectFirst("time")?.attr("datetime").orEmpty().take(5)
+                val time = TimeConverter.toLocal(rawTime, source)
+                val servers = li.select("a[href]")
+                    .filter { it.attr("href").contains("?r=") }
+                    .mapNotNull { a ->
+                        val href = a.attr("abs:href").ifEmpty { a.attr("href") }
+                        val embed = EmbedDecoder.fromHref(href) ?: return@mapNotNull null
+                        Server(
+                            name = a.selectFirst("span")?.text()?.trim().orEmpty().ifEmpty { "Canal" },
+                            quality = "",
+                            embedUrl = embed
+                        )
+                    }
+                events += Event(title, time, li.attr("data-category").trim(), servers)
+            }
+        }
+        return events
+    }
 
     /** Familia A: ul.menu + ?r=. Cada servidor ya es un embed final. */
     private fun parseMenu(html: String, baseUrl: String): List<Event> {
