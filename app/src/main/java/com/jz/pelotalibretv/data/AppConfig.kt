@@ -51,7 +51,7 @@ object AppConfig {
         ),
         Source(
             id = "alangulo2", name = "Al Ángulo TV (2)",
-            mirrors = listOf("https://alangulotv2.su"),
+            mirrors = listOf("https://alangulotv.si", "https://alangulotv2.su"),
             homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
             sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
             channelsEnabled = false,
