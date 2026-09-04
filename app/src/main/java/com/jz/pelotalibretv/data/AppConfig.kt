@@ -41,6 +41,26 @@ object AppConfig {
             strategy = "menuR", platform = "Pelota Libre"
         ),
         Source(
+            id = "pelotalibreuno", name = "Pelota Libre (uno)",
+            mirrors = listOf("https://pelotalibre.uno"),
+            homePath = "/", agendaPath = "/agenda-data.php", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // strapi JSON, base Perú
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "strapi", platform = "Pelota Libre"
+        ),
+        Source(
+            id = "pelotaalibrela", name = "Pelota Libre (la)",
+            mirrors = listOf("https://pelotaalibre.la"),
+            homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180, // menuR, UTC+1
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "menuR", platform = "Pelota Libre"
+        ),
+        Source(
             id = "alangulo1", name = "Al Ángulo TV",
             mirrors = listOf("https://alangulotv.quest"),
             homePath = "/", agendaPath = "/wp-admin/admin-ajax.php?action=futbol_agenda_data", userAgent = BROWSER_UA,

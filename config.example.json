@@ -16,6 +16,20 @@
       "channelsEnabled": false, "strategy": "menuR"
     },
     {
+      "id": "pelotalibreuno", "name": "Pelota Libre (uno)", "platform": "Pelota Libre",
+      "mirrors": ["https://pelotalibre.uno"],
+      "homePath": "/", "agendaPath": "/agenda-data.php",
+      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false, "strategy": "strapi"
+    },
+    {
+      "id": "pelotaalibrela", "name": "Pelota Libre (la)", "platform": "Pelota Libre",
+      "mirrors": ["https://pelotaalibre.la"],
+      "homePath": "/", "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false, "strategy": "menuR"
+    },
+    {
       "id": "alangulo1", "name": "Al Ángulo TV", "platform": "Al Ángulo TV",
       "mirrors": ["https://alangulotv.quest"],
       "homePath": "/", "agendaPath": "/wp-admin/admin-ajax.php?action=futbol_agenda_data",

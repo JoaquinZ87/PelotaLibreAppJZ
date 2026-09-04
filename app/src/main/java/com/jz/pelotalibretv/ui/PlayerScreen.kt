@@ -3,9 +3,6 @@ package com.jz.pelotalibretv.ui
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Message
-import android.os.SystemClock
-import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -22,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Reproductor: WebView blindado a pantalla completa que carga el embed.
@@ -35,7 +33,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 fun PlayerScreen(embedUrl: String, referer: String, onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     val context = LocalContext.current
-    val isTv = remember { context.isTvDevice() }
+    val active = remember { AtomicBoolean(true) } // corta el loop de autoplay al salir del player
 
     val webView = remember {
         WebView(context).apply {
@@ -79,20 +77,11 @@ fun PlayerScreen(embedUrl: String, referer: String, onBack: () -> Unit) {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     view ?: return
-                    // Arranque automático de la reproducción:
-                    if (isTv) {
-                        // TV (control remoto): flecha ARRIBA para enfocar el play, luego OK (centro).
-                        view.requestFocus()
-                        view.postDelayed({ simulateKey(view, KeyEvent.KEYCODE_DPAD_UP) }, 1600)
-                        view.postDelayed({ simulateKey(view, KeyEvent.KEYCODE_DPAD_CENTER) }, 2100)
-                    } else {
-                        // Celular (táctil): un toque real en el centro.
-                        view.postDelayed({ simulateCenterTap(view) }, 1800)
-                    }
-                    // Desmutear (arranca en mute); reintentos por si el <video> tarda en existir.
-                    view.postDelayed({ unmute(view) }, 3000)
-                    view.postDelayed({ unmute(view) }, 4800)
-                    view.postDelayed({ unmute(view) }, 7000)
+                    view.requestFocus()
+                    // Loop persistente (solo-JS): cada ~2s entra a los iframes same-origin, hace play()
+                    // + desmutea (si se frenó, lo re-arranca), clickea el botón de play del propio
+                    // player, y ESCONDE overlays de ads. No toca la pantalla (no clickea ads).
+                    tick(view, active)
                 }
             }
 
@@ -103,6 +92,7 @@ fun PlayerScreen(embedUrl: String, referer: String, onBack: () -> Unit) {
 
     DisposableEffect(Unit) {
         onDispose {
+            active.set(false)
             webView.stopLoading()
             webView.destroy()
         }
@@ -123,36 +113,50 @@ private fun hostMatches(target: String, allowed: String): Boolean {
     return t == a || t.endsWith(".$a") || a.endsWith(".$t")
 }
 
-/** Desmutea y sube el volumen de cualquier <video> del player (y de Clappr si está expuesto). */
-private fun unmute(webView: WebView) {
-    webView.evaluateJavascript(
-        "(function(){try{" +
-            "var v=document.getElementsByTagName('video');" +
-            "for(var i=0;i<v.length;i++){v[i].muted=false;v[i].volume=1.0;try{v[i].play();}catch(e){}}" +
-            "if(window.player){try{if(window.player.setVolume)window.player.setVolume(100);}catch(e){}" +
-            "try{if(window.player.unmute)window.player.unmute();}catch(e){}}" +
-            "}catch(e){}})();",
-        null
-    )
+/**
+ * Loop persistente SOLO-JS (cada ~2s hasta salir del player): corre [TICK_JS], que recorre el
+ * documento y sus iframes same-origin para (1) desmutear + `play()` cada `<video>` (si se frenó, lo
+ * re-arranca), (2) clickear el botón de play del propio player si nada reproduce, y (3) ESCONDER
+ * overlays de ads (divs fijos de z-index alto sin video/iframe adentro). NO toca la pantalla, así
+ * nunca clickea un anuncio. Se corta cuando [active] pasa a false (al salir del reproductor).
+ */
+private fun tick(webView: WebView, active: AtomicBoolean) {
+    if (!active.get()) return
+    webView.evaluateJavascript(TICK_JS, null)
+    webView.postDelayed({ tick(webView, active) }, 2000)
 }
 
-/** Envía una tecla del control remoto al WebView (D-pad), como si la apretara el usuario. */
-private fun simulateKey(webView: WebView, keyCode: Int) {
-    val t = SystemClock.uptimeMillis()
-    webView.dispatchKeyEvent(KeyEvent(t, t, KeyEvent.ACTION_DOWN, keyCode, 0))
-    webView.dispatchKeyEvent(KeyEvent(t, t + 40, KeyEvent.ACTION_UP, keyCode, 0))
-}
-
-/** Dispara un toque real en el centro del WebView (para arrancar el player). */
-private fun simulateCenterTap(webView: WebView) {
-    if (webView.width == 0 || webView.height == 0) return
-    val x = webView.width / 2f
-    val y = webView.height / 2f
-    val t = SystemClock.uptimeMillis()
-    val down = MotionEvent.obtain(t, t, MotionEvent.ACTION_DOWN, x, y, 0)
-    val up = MotionEvent.obtain(t, t + 60, MotionEvent.ACTION_UP, x, y, 0)
-    webView.dispatchTouchEvent(down)
-    webView.dispatchTouchEvent(up)
-    down.recycle()
-    up.recycle()
-}
+private const val TICK_JS = """
+(function(){
+  function walk(doc){
+    try{
+      var vs=doc.getElementsByTagName('video');
+      var playing=false;
+      for(var i=0;i<vs.length;i++){var v=vs[i];
+        try{v.muted=false;v.volume=1;}catch(e){}
+        if(!v.paused && !v.ended && v.readyState>2){playing=true;} else {try{v.play();}catch(e){}}
+      }
+      if(vs.length && !playing){
+        var sels=['.play-wrapper','.vjs-big-play-button','.jw-icon-display','.jw-display-icon-container','[data-player]','.clappr-player','.player-poster','.poster'];
+        for(var s=0;s<sels.length;s++){var el=doc.querySelector(sels[s]); if(el){try{el.click();}catch(e){}}}
+      }
+      // Esconder overlays de ads: fijos/absolutos, z alto, sin video ni iframe adentro (protege al player).
+      var els=doc.querySelectorAll('body *');
+      for(var k=0;k<els.length;k++){var e=els[k];
+        try{
+          if(e.querySelector && e.querySelector('video,iframe')) continue;
+          if(e.tagName==='VIDEO'||e.tagName==='IFRAME') continue;
+          var st=doc.defaultView.getComputedStyle(e);
+          var z=parseInt(st.zIndex)||0;
+          if((st.position==='fixed'||st.position==='absolute') && z>=1000 && e.offsetWidth>=120 && e.offsetHeight>=50){
+            e.style.setProperty('display','none','important');
+          }
+        }catch(e2){}
+      }
+      var ifr=doc.getElementsByTagName('iframe');
+      for(var j=0;j<ifr.length;j++){try{var d=ifr[j].contentDocument||(ifr[j].contentWindow&&ifr[j].contentWindow.document); if(d)walk(d);}catch(e){}}
+    }catch(e){}
+  }
+  walk(document);
+})();
+"""

@@ -36,7 +36,43 @@ class AgendaScraper(
         "rows" -> parseRows(html, baseUrl)
         "menu2" -> parseMenu2(html, baseUrl)
         "wpjson" -> parseWpJson(html)
+        "strapi" -> parseStrapi(html)
         else -> parseMenu(html, baseUrl)
+    }
+
+    /**
+     * JSON tipo Strapi (pelotalibre.uno `/agenda-data.php`): `data[].attributes` con `diary_hour`
+     * ("HH:MM:SS", base Perú/America-Lima), `diary_description` (título) y `embeds.data[].attributes`
+     * con `embed_name` y `embed_iframe` (que trae `?r=BASE64` → embed real, lo decodifica EmbedDecoder).
+     */
+    private fun parseStrapi(json: String): List<Event> {
+        val events = mutableListOf<Event>()
+        runCatching {
+            val data = JSONObject(json).optJSONArray("data") ?: return emptyList()
+            for (i in 0 until data.length()) {
+                runCatching {
+                    val at = data.getJSONObject(i).optJSONObject("attributes") ?: return@runCatching
+                    val title = at.optString("diary_description").trim()
+                    if (title.isEmpty()) return@runCatching
+                    val time = TimeConverter.toLocal(at.optString("diary_hour").take(5), source)
+                    val servers = mutableListOf<Server>()
+                    val embeds = at.optJSONObject("embeds")?.optJSONArray("data")
+                    if (embeds != null) {
+                        for (e in 0 until embeds.length()) {
+                            val ea = embeds.getJSONObject(e).optJSONObject("attributes") ?: continue
+                            val embed = EmbedDecoder.fromHref(ea.optString("embed_iframe")) ?: continue
+                            servers += Server(
+                                name = ea.optString("embed_name").trim().ifEmpty { "Canal" },
+                                quality = ea.optString("idioma").trim().let { if (it == "null") "" else it },
+                                embedUrl = embed
+                            )
+                        }
+                    }
+                    events += Event(title, time, "", servers)
+                }
+            }
+        }
+        return events
     }
 
     /**
