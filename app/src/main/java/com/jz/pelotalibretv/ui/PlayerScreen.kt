@@ -140,17 +140,27 @@ private const val TICK_JS = """
         var sels=['.play-wrapper','.vjs-big-play-button','.jw-icon-display','.jw-display-icon-container','[data-player]','.clappr-player','.player-poster','.poster'];
         for(var s=0;s<sels.length;s++){var el=doc.querySelector(sels[s]); if(el){try{el.click();}catch(e){}}}
       }
-      // Esconder overlays de ads: fijos/absolutos, z alto, sin video ni iframe adentro (protege al player).
-      var els=doc.querySelectorAll('body *');
+      // Esconder overlays de ads. Protege al PLAYER: ancestros de un <video> y todo lo que SEA o
+      // CONTENGA media grande (iframe/video >= 50% x 40% del viewport). Esconde lo demás que sea
+      // position:fixed (o absolute con z alto): los ads modales/banners/age-gate casi siempre son fixed.
+      var vw=(doc.documentElement&&doc.documentElement.clientWidth)||1;
+      var vh=(doc.documentElement&&doc.documentElement.clientHeight)||1;
+      var prot=[]; for(var pv=0;pv<vs.length;pv++){var n=vs[pv]; while(n){prot.push(n); n=n.parentElement;}}
+      function esProt(e){for(var p=0;p<prot.length;p++){if(prot[p]===e)return true;}return false;}
+      function esGrande(e){return e.offsetWidth>=vw*0.5 && e.offsetHeight>=vh*0.4;}
+      function contieneMediaGrande(e){var m=e.querySelectorAll?e.querySelectorAll('iframe,video'):[];for(var q=0;q<m.length;q++){if(esGrande(m[q]))return true;}return false;}
+      var els=doc.body?doc.body.querySelectorAll('*'):[];
       for(var k=0;k<els.length;k++){var e=els[k];
         try{
-          if(e.querySelector && e.querySelector('video,iframe')) continue;
-          if(e.tagName==='VIDEO'||e.tagName==='IFRAME') continue;
+          if(esProt(e)) continue;
           var st=doc.defaultView.getComputedStyle(e);
-          var z=parseInt(st.zIndex)||0;
-          if((st.position==='fixed'||st.position==='absolute') && z>=1000 && e.offsetWidth>=120 && e.offsetHeight>=50){
-            e.style.setProperty('display','none','important');
-          }
+          var fixed=st.position==='fixed';
+          var absAlto=st.position==='absolute' && (parseInt(st.zIndex)||0)>=1000;
+          if(!fixed && !absAlto) continue;
+          if(e.offsetWidth<60 || e.offsetHeight<30) continue;
+          if((e.tagName==='IFRAME'||e.tagName==='VIDEO') && esGrande(e)) continue; // es el player
+          if(contieneMediaGrande(e)) continue;                                     // contiene el player
+          e.style.setProperty('display','none','important');
         }catch(e2){}
       }
       var ifr=doc.getElementsByTagName('iframe');
