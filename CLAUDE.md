@@ -193,6 +193,18 @@ decodificado** (embed directo, ej `https://tvf90.com/1.php?stream=espn4`) — no
 `time_raw` está en el huso de la fuente (Al Ángulo = Perú `-300`, verificado por cruce). El `agendaPath`
 de la fuente ES la ruta del endpoint (con su `?action=...`).
 
+### Familia D — `strategy = "strapi"` (Pelota Libre `pelotalibre.uno`, 2026)
+
+Otra plantilla: agenda **JSON tipo Strapi** en `/agenda-data.php` (el `agendaPath`). La maneja
+`AgendaScraper.parseStrapi`. Forma: `data[].attributes` con `diary_hour` ("HH:MM:SS"), `diary_description`
+(título) y `embeds.data[].attributes` con `embed_name`, `idioma` y `embed_iframe` (`/embed/eventos.html?r=BASE64`
+→ `EmbedDecoder` lo decodifica). **Base Perú (`-300`, `ZONA_HORARIA_ORIGEN=America/Lima`).** Si `idioma`
+viene JSON `null`, `optString` devuelve la string `"null"` (se filtra a "").
+
+> **Pelota Libre = 4 variantes** (sept/2026), todas bajo la solapa "Pelota Libre" (se elige por dominio):
+> `pelotalibrehd.su` (menu2, Perú) · `pelotalibre-hd.su` (menuR, Perú) · `pelotalibre.uno` (strapi, Perú) ·
+> `pelotaalibre.la` (menuR, **UTC+1** — el crudo sin JS da UTC+1; el navegador convierte con `horario.js`).
+
 ### Familia B — `strategy = "rows"` (RojaDirecta, Tarjeta Roja)
 
 Agregadores: la agenda es una lista de **filas** de partido, y cada link **NO** es el embed sino una
@@ -230,13 +242,15 @@ scrapear. Los selectores de fila/hora/nombre/links son **por fuente** (`eventRow
   invisible en la captura, tokens que rotan por minuto en vivo, IP-binding) hace que el replay nativo
   sea "moneda al aire" por stream. El WebView "just works" porque el browser manda
   Referer/Origin/cookies solo.
-- **Autoplay AUTOMÁTICO (cambió respecto del diseño original).** El plan era arrancar muteado y
-  desmutear con el primer OK del usuario. En la práctica eso dejaba al usuario apretando botones a
-  ciegas, así que hoy `PlayerScreen` **arranca la reproducción solo**: en TV simula `DPAD_UP` +
-  `DPAD_CENTER` sobre el WebView (KeyEvents reales, no JS sintético) y en celular un tap real en el
-  centro; después **desmutea con reintentos** (3 s / 4.8 s / 7 s) porque el `<video>` tarda en existir.
-  El pop-under "primer click abre un ad" se neutraliza con las defensas de popups, no esperando al
-  usuario.
+- **Autoplay AUTOMÁTICO — hoy SOLO-JS (sept/2026, `PlayerScreen.tick`).** Un loop cada ~2s (mientras el
+  player está abierto) que recorre el documento y sus **iframes same-origin** y: (1) desmutea + `play()`
+  cada `<video>` (si se frenó, lo re-arranca — arregla el "arranca y se detiene"), (2) si nada reproduce,
+  clickea el botón de play del propio player, y (3) **esconde overlays de ads** (elementos fixed/absolute
+  z alto SIN video/iframe adentro → `display:none`; protege al player). **NO** se tocan teclas ni la
+  pantalla (`dispatchTouchEvent`/`dispatchKeyEvent`): un toque al centro en estas páginas hostiles
+  **clickeaba un ad** y mandaba la app a segundo plano. El embed suele ser un iframe same-origin
+  (ej `tvf90.com/hd.php` → `tvf90.com/5.php`), por eso el JS puede entrar y darle play. Se corta con un
+  `AtomicBoolean` al salir (onDispose).
 - **Popups:** apilar TODAS las defensas — multiple-windows OFF, `javaScriptCanOpenWindowsAutomatically`
   OFF, `onCreateWindow`→false, y bloqueo de navegación del **main frame** a otro host en
   `shouldOverrideUrlLoading` (comparación de hosts tolerante a `www.` y subdominios).
@@ -371,9 +385,11 @@ https://claude.ai/code/routines (id `trig_018CSjpDQmmEimgJDZJYHws5`).
 
 - Sin `touchscreen required=false` → la app **no aparece** en el launcher de TV (error #1).
 - Banner debe ser exactamente **320x180** y contener el nombre como texto, o el tile sale vacío.
-- WebView **roba el foco** y se come el D-pad: reenviar KeyEvents con `dispatchKeyEvent` (los
-  eventos JS sintéticos por `evaluateJavascript` son "untrusted" y no manejan controles nativos).
-  Por eso el autoplay simula teclas reales, no `click()` por JS.
+- WebView **roba el foco** y se come el D-pad. **OJO (sept/2026):** NO uses `dispatchTouchEvent`/
+  `dispatchKeyEvent` para arrancar el player en estas páginas — un toque al centro **clickea un ad** y
+  manda la app a segundo plano. El autoplay pasó a ser **solo-JS** (`video.play()` + click al botón del
+  propio player recorriendo iframes same-origin; ver §4). El `.click()` JS sobre el botón HTML del player
+  sí funciona (es un click DOM real sobre ese elemento), a diferencia de simular controles nativos.
 - `onShowCustomView` sin `onCustomViewHidden()` en `onHideCustomView` **traba** el player al salir de
   fullscreen. (Hoy no implementamos custom view: el WebView ya ocupa toda la pantalla.)
 - Body de OkHttp es one-shot: siempre `.use { }`.
