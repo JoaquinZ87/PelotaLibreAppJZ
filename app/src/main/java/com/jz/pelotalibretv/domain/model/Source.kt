@@ -32,5 +32,10 @@ data class Source(
     val eventRowSelector: String = "",
     val eventTimeSelector: String = "",
     val eventNameSelector: String = "",
-    val eventLinkSelector: String = ""
+    val eventLinkSelector: String = "",
+
+    // Agrupa variantes bajo una misma solapa (plataforma). Vacío => se usa `name` como plataforma
+    // (comportamiento viejo: cada fuente es su propia solapa). Las variantes de una plataforma se
+    // eligen adentro de la solapa; cada una conserva su propio `mirrors` (fallback de dominios).
+    val platform: String = ""
 )

@@ -87,7 +87,8 @@ object RemoteConfig {
                 eventRowSelector = o.optString("eventRowSelector", ""),
                 eventTimeSelector = o.optString("eventTimeSelector", ""),
                 eventNameSelector = o.optString("eventNameSelector", ""),
-                eventLinkSelector = o.optString("eventLinkSelector", "")
+                eventLinkSelector = o.optString("eventLinkSelector", ""),
+                platform = o.optString("platform", "")
             )
         }
         if (list.isNotEmpty()) {

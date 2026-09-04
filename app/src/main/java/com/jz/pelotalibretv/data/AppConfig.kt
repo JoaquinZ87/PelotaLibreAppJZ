@@ -28,7 +28,7 @@ object AppConfig {
             channelsEnabled = false,
             channelCardSelector = "", channelNameSelector = "",
             channelLogoSelector = "", channelLinkSelector = "",
-            strategy = "menu2"
+            strategy = "menu2", platform = "Pelota Libre"
         ),
         Source(
             id = "pelotalibremas", name = "Pelota Libre +",
@@ -38,25 +38,27 @@ object AppConfig {
             channelsEnabled = false,
             channelCardSelector = "div.cards-container div.card", channelNameSelector = "h3",
             channelLogoSelector = "img", channelLinkSelector = "a.btn-watch",
-            strategy = "menuR"
+            strategy = "menuR", platform = "Pelota Libre"
         ),
         Source(
             id = "alangulo1", name = "Al Ángulo TV",
-            mirrors = listOf("https://alangulotv.su"),
-            homePath = "/", agendaPath = "/agenda2/", userAgent = BROWSER_UA,
-            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180,
+            mirrors = listOf("https://alangulotv.quest"),
+            homePath = "/", agendaPath = "/wp-admin/admin-ajax.php?action=futbol_agenda_data", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // plantilla WP nueva (JSON), base Perú
             channelsEnabled = false,
-            channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
-            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "wpjson", platform = "Al Ángulo TV"
         ),
         Source(
             id = "alangulo2", name = "Al Ángulo TV (2)",
-            mirrors = listOf("https://alangulotv.si", "https://alangulotv2.su"),
+            mirrors = listOf("https://alangulotv.cx"),
             homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
-            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
+            sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180, // menuR clasico, UTC+1
             channelsEnabled = false,
             channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
-            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+            channelLogoSelector = "img", channelLinkSelector = "a.btn",
+            platform = "Al Ángulo TV"
         ),
         Source(
             id = "rustico", name = "Rústico TV",
@@ -65,7 +67,8 @@ object AppConfig {
             sourceUtcOffsetMinutes = 60, targetUtcOffsetMinutes = -180,
             channelsEnabled = false,
             channelCardSelector = "div.grid div.card", channelNameSelector = "h3",
-            channelLogoSelector = "img", channelLinkSelector = "a.btn"
+            channelLogoSelector = "img", channelLinkSelector = "a.btn",
+            platform = "Rústico TV"
         ),
         Source(
             id = "rojadirecta", name = "RojaDirecta",
@@ -77,7 +80,8 @@ object AppConfig {
             channelLogoSelector = "", channelLinkSelector = "",
             strategy = "rows",
             eventRowSelector = "div.match", eventTimeSelector = "span.time",
-            eventNameSelector = "span.name", eventLinkSelector = "div.chans a[href]"
+            eventNameSelector = "span.name", eventLinkSelector = "div.chans a[href]",
+            platform = "RojaDirecta"
         )
     )
 

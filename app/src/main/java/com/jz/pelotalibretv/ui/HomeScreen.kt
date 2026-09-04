@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,12 +48,11 @@ import com.jz.pelotalibretv.domain.model.Server
 import com.jz.pelotalibretv.domain.model.Source
 import kotlinx.coroutines.launch
 
-private enum class Mode { CANALES, EVENTOS }
-
 /**
- * Pantalla principal MULTI-FUENTE. Arriba: selector de fuente (PelotaLibre, Fútbol Libre, AlÁngulo…)
- * y selector de modalidad (Canales/Eventos). Al elegir un evento con varias señales, un selector
- * de servidor. Reproductor a pantalla completa. Orientación por dispositivo.
+ * Pantalla principal MULTI-PLATAFORMA. Arriba: solapas de PLATAFORMA (Pelota Libre, Al Ángulo TV…).
+ * Adentro, si la plataforma tiene varias variantes ("mirrors"), un selector por dominio para cambiar
+ * entre frontends. Siempre se muestra la agenda (Eventos). Al elegir un evento con varias señales,
+ * un selector de señal. Reproductor a pantalla completa. Orientación por dispositivo.
  */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -61,11 +61,16 @@ fun HomeScreen() {
     val isTv = remember { context.isTvDevice() }
     val activity = remember { context.findActivity() }
     val sources = remember { AppConfig.sources }
+    // Agrupar fuentes por PLATAFORMA (clave = platform, o name si viene vacío), preservando orden.
+    // Cada plataforma es una solapa; sus variantes ("mirrors") se eligen adentro.
+    val platforms = remember(sources) {
+        val map = LinkedHashMap<String, MutableList<Source>>()
+        sources.forEach { s -> map.getOrPut(s.platform.ifBlank { s.name }) { mutableListOf() } += s }
+        map.map { it.key to it.value.toList() }
+    }
 
     var selectedSource by remember { mutableStateOf(sources.first()) }
-    var mode by remember {
-        mutableStateOf(if (sources.first().channelsEnabled) Mode.CANALES else Mode.EVENTOS)
-    }
+    val lastVariant = remember { mutableStateMapOf<String, Source>() } // última variante elegida por plataforma
     var playUrl by remember { mutableStateOf<String?>(null) }
     var playReferer by remember { mutableStateOf("") }
     var opening by remember { mutableStateOf(false) }
@@ -86,14 +91,9 @@ fun HomeScreen() {
     }
 
     val agendaVM: AgendaViewModel = viewModel()
-    val channelsVM: ChannelsViewModel = viewModel()
 
-    // Cambiar de fuente = recargar agenda y canales de esa fuente.
-    LaunchedEffect(selectedSource) {
-        agendaVM.setSource(selectedSource)
-        channelsVM.setSource(selectedSource)
-        if (!selectedSource.channelsEnabled) mode = Mode.EVENTOS
-    }
+    // Cambiar de variante = recargar la agenda de esa fuente.
+    LaunchedEffect(selectedSource) { agendaVM.setSource(selectedSource) }
 
     LaunchedEffect(playUrl, isTv) {
         activity?.requestedOrientation = when {
@@ -143,33 +143,29 @@ fun HomeScreen() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        val activePlatform = selectedSource.platform.ifBlank { selectedSource.name }
+        val activeVariants = platforms.firstOrNull { it.first == activePlatform }?.second
+            ?: listOf(selectedSource)
         Column(modifier = Modifier.fillMaxSize()) {
-            SourceSelector(sources, selectedSource) { selectedSource = it }
-            ModeSelector(mode, selectedSource.channelsEnabled) { mode = it }
-            when (mode) {
-                Mode.CANALES -> ChannelsContent(
-                    viewModel = channelsVM,
-                    onOpenChannel = { channel ->
-                        opening = true
-                        scope.launch {
-                            val url = EmbedResolver.resolveChannel(channel.pageUrl, selectedSource.userAgent)
-                                ?: channel.pageUrl
-                            playReferer = channel.pageUrl
-                            opening = false
-                            playUrl = url
-                        }
-                    }
-                )
-                Mode.EVENTOS -> AgendaContent(
-                    viewModel = agendaVM,
-                    onPlayEvent = { event ->
-                        when {
-                            event.servers.size == 1 -> { activeEvent = null; playServer(event.servers.first()) }
-                            event.servers.size > 1 -> { activeEvent = event; serverPicker = event }
-                        }
-                    }
-                )
+            PlatformSelector(platforms.map { it.first }, activePlatform) { p ->
+                val variants = platforms.firstOrNull { it.first == p }?.second
+                if (variants != null) selectedSource = lastVariant[p] ?: variants.first()
             }
+            if (activeVariants.size > 1) {
+                VariantSelector(activeVariants, selectedSource) { v ->
+                    lastVariant[activePlatform] = v
+                    selectedSource = v
+                }
+            }
+            AgendaContent(
+                viewModel = agendaVM,
+                onPlayEvent = { event ->
+                    when {
+                        event.servers.size == 1 -> { activeEvent = null; playServer(event.servers.first()) }
+                        event.servers.size > 1 -> { activeEvent = event; serverPicker = event }
+                    }
+                }
+            )
         }
 
         if (opening) {
@@ -268,10 +264,10 @@ private fun UpdateDialog(
 }
 
 @Composable
-private fun SourceSelector(sources: List<Source>, selected: Source, onSelect: (Source) -> Unit) {
+private fun PlatformSelector(platforms: List<String>, selected: String, onSelect: (String) -> Unit) {
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
-    val firstId = sources.firstOrNull()?.id
+    val first = platforms.firstOrNull()
 
     LazyRow(
         modifier = Modifier
@@ -279,19 +275,19 @@ private fun SourceSelector(sources: List<Source>, selected: Source, onSelect: (S
             .padding(horizontal = 48.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(sources) { src ->
+        items(platforms) { p ->
             Chip(
-                label = src.name,
-                selected = src.id == selected.id,
-                modifier = if (src.id == firstId) Modifier.focusRequester(firstFocus) else Modifier
-            ) { onSelect(src) }
+                label = p,
+                selected = p == selected,
+                modifier = if (p == first) Modifier.focusRequester(firstFocus) else Modifier
+            ) { onSelect(p) }
         }
     }
 }
 
+/** Selector de variantes ("mirrors") de la plataforma activa. Etiqueta = dominio. Centrado + divisor. */
 @Composable
-private fun ModeSelector(mode: Mode, channelsEnabled: Boolean, onSelect: (Mode) -> Unit) {
-    // Nivel subordinado a las fuentes: separador sutil + fila centrada.
+private fun VariantSelector(variants: List<Source>, selected: Source, onSelect: (Source) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
@@ -306,11 +302,20 @@ private fun ModeSelector(mode: Mode, channelsEnabled: Boolean, onSelect: (Mode) 
                 .padding(horizontal = 48.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
         ) {
-            if (channelsEnabled) Chip("Canales", mode == Mode.CANALES) { onSelect(Mode.CANALES) }
-            Chip("Eventos", mode == Mode.EVENTOS) { onSelect(Mode.EVENTOS) }
+            variants.forEach { v ->
+                Chip(domainLabel(v), selected = v.id == selected.id) { onSelect(v) }
+            }
         }
     }
 }
+
+/** Dominio (host) de la variante, para mostrar como etiqueta del mirror (ej "pelotalibrehd.su"). */
+private fun domainLabel(source: Source): String =
+    source.mirrors.firstOrNull().orEmpty()
+        .substringAfter("://")
+        .removePrefix("www.")
+        .substringBefore("/")
+        .ifBlank { source.name }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

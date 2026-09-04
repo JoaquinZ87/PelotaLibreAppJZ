@@ -1,4 +1,4 @@
-# CLAUDE.md — PelotaLibre TV (uso estrictamente personal)
+# AGENTS.md — PelotaLibre TV (uso estrictamente personal)
 
 App **Android TV** (Kotlin nativo) para ver agendas de streams de "pelota libre" en un TV box,
 manejada 100% con el **control remoto (D-pad)**. Debe ser **mega simple de usar**: prender, elegir
@@ -45,11 +45,9 @@ opcional** (no implementado todavía, ver M5).
 
 ```
 [ AppConfig.sources ]  <--pisa--  [ RemoteConfig ]  <--  config.json (GitHub raw)
-   List<Source>: platform, mirrors, paths, selectores, husos, strategy
+   List<Source>: mirrors, paths, selectores, husos, strategy
         |
-        |  UI de 2 niveles: solapa = PLATAFORMA (agrupa por Source.platform);
-        |  adentro, VariantSelector elige la variante ("mirror") por dominio.
-        |  (HomeScreen: PlatformSelector -> VariantSelector -> agenda)
+        |  el usuario elige fuente (SourceSelector en HomeScreen)
         v
    +----+--------------------------------------------------+
    |                                                        |
@@ -65,8 +63,7 @@ opcional** (no implementado todavía, ver M5).
         |                                                  |
         v                                                  v
               [ UI Compose for TV: HomeScreen ]
-        PlatformSelector · VariantSelector (variantes/mirrors por dominio) · agenda · ServerPicker
-        (el toggle Canales/Eventos se sacó por ahora; ChannelsScreen/VM quedan dormidos)
+        SourceSelector · ModeSelector (Canales/Eventos) · grillas · ServerPicker
                           |
                           v  al elegir un servidor / canal
    needsResolve? --sí--> [ EmbedResolver ] baja la página y saca el <iframe>
@@ -180,18 +177,6 @@ cruzando los horarios crudos con AlÁngulo1, que también es Perú).
 >   iframe): **más eventos** pero 1 señal cada uno.
 >
 > Los dos publican en **hora de Perú (`-300`)**.
-
-### Familia C — `strategy = "wpjson"` (plantilla WordPress nueva, 2026)
-
-El operador migró varios sitios a un **WordPress con plugin `futbol-agenda`** que sirve la agenda por
-**JSON** (no HTML server-rendered): la usa **Al Ángulo** (`alangulotv.quest`) y también apareció en
-`pelotalibre.uno`. El HTML raíz NO trae los eventos (los pinta JS); hay que pegarle al endpoint:
-`/wp-admin/admin-ajax.php?action=futbol_agenda_data` (GET, sin nonce, devuelve JSON). Lo maneja
-`AgendaScraper.parseWpJson`. Estructura: `{"success":true,"data":[{ title, time_raw:"HH:MM:SS",
-date_raw, country, channels:[{ name, stream_url }], has_channels }]}`. **`stream_url` ya viene
-decodificado** (embed directo, ej `https://tvf90.com/1.php?stream=espn4`) — no hay base64 ni resolver.
-`time_raw` está en el huso de la fuente (Al Ángulo = Perú `-300`, verificado por cruce). El `agendaPath`
-de la fuente ES la ruta del endpoint (con su `?action=...`).
 
 ### Familia B — `strategy = "rows"` (RojaDirecta, Tarjeta Roja)
 
@@ -356,14 +341,14 @@ adb logcat -s PelotaLibre                # logs de la app
 Distribución sin PC: bajar el APK en el box con la app **Downloader** (AFTVnews), o dejar que el
 auto-update lo haga solo.
 
-**Mantenimiento automático (rutina semanal en la nube):** hay una *routine* de Claude Code que corre
+**Mantenimiento automático (rutina semanal en la nube):** hay una *routine* de Codex que corre
 **los lunes 12:00 UTC (9:00 ART)** en la nube, con el repo `pelotalibretv-config` clonado. Revisa cada
 fuente del `config.json` (baja la agenda con `curl -skL`, clasifica OK / caída / incautada / rediseñada /
 bloqueada-por-Cloudflare), y si algo se rompió **busca el dominio nuevo o re-deriva selectores y commitea
 el `config.json` sola**, avisando por **Telegram** (bot propio → chat de Joaquín). Solo toca
 `config.json`; una estructura nueva que no encaje en `menuR`/`menu2`/`rows` la marca como
 "NECESITA CAMBIO DE CÓDIGO" (eso sí requiere un humano). Gestión/edición de la rutina:
-https://claude.ai/code/routines (id `trig_018CSjpDQmmEimgJDZJYHws5`).
+https://Codex.ai/code/routines (id `trig_018CSjpDQmmEimgJDZJYHws5`).
 
 ---
 

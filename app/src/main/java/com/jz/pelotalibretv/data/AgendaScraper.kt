@@ -6,6 +6,7 @@ import com.jz.pelotalibretv.domain.model.Source
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import org.jsoup.Jsoup
 
 /**
@@ -34,7 +35,45 @@ class AgendaScraper(
     fun parse(html: String, baseUrl: String): List<Event> = when (source.strategy) {
         "rows" -> parseRows(html, baseUrl)
         "menu2" -> parseMenu2(html, baseUrl)
+        "wpjson" -> parseWpJson(html)
         else -> parseMenu(html, baseUrl)
+    }
+
+    /**
+     * Plantilla WordPress nueva (2026): plugin "futbol-agenda" que sirve la agenda por JSON en
+     * `/wp-admin/admin-ajax.php?action=futbol_agenda_data`. La usan alangulotv.quest, pelotalibre.uno,
+     * etc. El JSON ya trae los embeds decodificados en `channels[].stream_url` (no hay base64 ni que
+     * resolver). `time_raw` viene en el huso de la fuente (ej Perú -300).
+     */
+    private fun parseWpJson(json: String): List<Event> {
+        val events = mutableListOf<Event>()
+        runCatching {
+            val data = JSONObject(json).optJSONArray("data") ?: return emptyList()
+            for (i in 0 until data.length()) {
+                runCatching {
+                    val o = data.getJSONObject(i)
+                    val title = o.optString("title").trim()
+                    if (title.isEmpty()) return@runCatching
+                    val time = TimeConverter.toLocal(o.optString("time_raw").take(5), source)
+                    val servers = mutableListOf<Server>()
+                    val chans = o.optJSONArray("channels")
+                    if (chans != null) {
+                        for (c in 0 until chans.length()) {
+                            val ch = chans.optJSONObject(c) ?: continue
+                            val url = ch.optString("stream_url").trim()
+                            if (url.isEmpty() || !url.startsWith("http")) continue
+                            servers += Server(
+                                name = ch.optString("name").trim().ifEmpty { "Canal" },
+                                quality = "",
+                                embedUrl = url
+                            )
+                        }
+                    }
+                    events += Event(title, time, o.optString("country").trim(), servers)
+                }
+            }
+        }
+        return events
     }
 
     /**

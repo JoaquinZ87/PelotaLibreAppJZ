@@ -1,74 +1,49 @@
 {
-  "_comment": "Config remota multi-fuente. Editá esto en tu repo de GitHub para agregar/arreglar/quitar sitios SIN recompilar. strategy: 'menuR' (Familia A: ul.menu + ?r=), 'menu2' (Familia A rediseñada: ul#menu + div.info + ul.submenu) o 'rows' (Familia B: fila->detalle->iframe). Si falta 'sources', la app usa sus defaults.",
+  "_comment": "Config remota multi-fuente. Editá esto en tu repo de GitHub para agregar/arreglar/quitar sitios SIN recompilar. 'platform' agrupa variantes bajo una misma solapa (la UI muestra una solapa por plataforma y adentro deja cambiar entre variantes/mirrors por dominio). strategy: 'menuR' (Familia A: ul.menu + ?r=), 'menu2' (Familia A rediseñada: ul#menu + div.info + ul.submenu), 'wpjson' (plantilla WordPress nueva: JSON en /wp-admin/admin-ajax.php?action=futbol_agenda_data) o 'rows' (Familia B: fila->detalle->iframe). Si falta 'sources', la app usa sus defaults.",
   "sources": [
     {
-      "id": "pelotalibre", "name": "Pelota Libre",
+      "id": "pelotalibre", "name": "Pelota Libre", "platform": "Pelota Libre",
       "mirrors": ["https://pelotalibrehd.su"],
       "homePath": "/es/", "agendaPath": "/es/agenda/",
       "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
       "channelsEnabled": false, "strategy": "menu2"
     },
     {
-      "id": "pelotalibremas", "name": "Pelota Libre +",
+      "id": "pelotalibremas", "name": "Pelota Libre +", "platform": "Pelota Libre",
       "mirrors": ["https://pelotalibre-hd.su"],
       "homePath": "/", "agendaPath": "/agenda2/",
       "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "channelCardSelector": "div.cards-container div.card", "channelNameSelector": "h3",
-      "channelLogoSelector": "img", "channelLinkSelector": "a.btn-watch",
-      "strategy": "menuR"
+      "channelsEnabled": false, "strategy": "menuR"
     },
     {
-      "id": "futbollibre", "name": "Fútbol Libre TV",
-      "mirrors": ["https://futbol-libres.su"],
-      "homePath": "/", "agendaPath": "/agenda/",
-      "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": true,
-      "channelCardSelector": "div.cards-container div.card", "channelNameSelector": "h3",
-      "channelLogoSelector": "img", "channelLinkSelector": "a.btn-watch",
-      "strategy": "menuR"
-    },
-    {
-      "id": "alangulo1", "name": "Al Ángulo TV",
-      "mirrors": ["https://alangulotv.su"],
-      "homePath": "/", "agendaPath": "/agenda2/",
+      "id": "alangulo1", "name": "Al Ángulo TV", "platform": "Al Ángulo TV",
+      "mirrors": ["https://alangulotv.quest"],
+      "homePath": "/", "agendaPath": "/wp-admin/admin-ajax.php?action=futbol_agenda_data",
       "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false, "strategy": "menuR"
+      "channelsEnabled": false, "strategy": "wpjson"
     },
     {
-      "id": "alangulo2", "name": "Al Ángulo TV (2)",
-      "mirrors": ["https://alangulotv.si", "https://alangulotv2.su"],
+      "id": "alangulo2", "name": "Al Ángulo TV (2)", "platform": "Al Ángulo TV",
+      "mirrors": ["https://alangulotv.cx"],
       "homePath": "/", "agendaPath": "/agenda.php",
       "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
       "channelsEnabled": false, "strategy": "menuR"
     },
     {
-      "id": "rustico", "name": "Rústico TV",
-      "mirrors": ["https://mirusticotv.su", "https://rusticotv.su"],
+      "id": "rustico", "name": "Rústico TV", "platform": "Rústico TV",
+      "mirrors": ["https://rusticotv.la", "https://mirusticotv.su", "https://rusticotv.su"],
       "homePath": "/", "agendaPath": "/agenda.php",
       "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "menuR"
+      "channelsEnabled": false, "strategy": "menuR"
     },
     {
-      "id": "rojadirecta", "name": "RojaDirecta",
+      "id": "rojadirecta", "name": "RojaDirecta", "platform": "RojaDirecta",
       "mirrors": ["https://rojadirecta.st"],
-      "homePath": "/", "agendaPath": "/",
+      "homePath": "/", "agendaPath": "/programacion/",
       "sourceUtcOffsetMinutes": 120, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "rows",
+      "channelsEnabled": false, "strategy": "rows",
       "eventRowSelector": "div.match", "eventTimeSelector": "span.time",
       "eventNameSelector": "span.name", "eventLinkSelector": "div.chans a[href]"
-    },
-    {
-      "id": "tarjetaroja", "name": "Tarjeta Roja TV",
-      "mirrors": ["https://tarjetarojatv.click"],
-      "homePath": "/", "agendaPath": "/",
-      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "rows",
-      "eventRowSelector": "table tr", "eventTimeSelector": "span.t",
-      "eventNameSelector": "td a", "eventLinkSelector": "td a[href]"
     }
   ]
 }
