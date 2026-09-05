@@ -1,0 +1,41 @@
+{
+  "format": "json",
+  "recognize": "$.data",
+  "items": "$.data[*].attributes",
+  "allowEmpty": true,
+  "timeFormat": "HH:mm:ss",
+  "fields": {
+    "title": {
+      "select": "$.diary_description"
+    },
+    "time": {
+      "select": "$.diary_hour"
+    }
+  },
+  "servers": {
+    "items": "$.embeds.data[*].attributes",
+    "fields": {
+      "name": {
+        "select": "$.embed_name"
+      },
+      "quality": {
+        "select": "$.idioma"
+      },
+      "url": {
+        "select": "$.embed_iframe",
+        "transforms": [
+          {
+            "op": "query",
+            "value": "r"
+          },
+          {
+            "op": "base64"
+          },
+          {
+            "op": "absolute"
+          }
+        ]
+      }
+    }
+  }
+}

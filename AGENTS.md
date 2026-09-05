@@ -8,10 +8,41 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
 > Este archivo es la fuente de verdad del proyecto. **Mantenerlo vivo**: actualizar el estado de los
 > módulos y las decisiones cada vez que cambie algo relevante.
 >
-> Última revisión: **sep/2026** (v0.8, `versionCode 8`). Las secciones históricas
+> Última revisión: **sep/2026** (v0.9 local, `versionCode 9`; publicada: v0.8). Las secciones históricas
 > conservan decisiones de julio; para el player prevalece la actualización siguiente.
 
 ## Actualización del reproductor — septiembre 2026
+
+- **Arquitectura v0.9:** `RecipeEngine` interpreta recetas HTML/JSON declarativas, con campos,
+  transformaciones limitadas, enlaces relativos y hasta tres documentos intermedios. No eval/DEX/JS
+  remoto. `ConfigCodec` valida el catálogo completo; desconocido no equivale a agenda vacía.
+  Las seis estrategias históricas tienen receta; parsers Kotlin quedan como respaldo explícito
+  (`useLegacyParser=true`). Fuente nueva: editar `config/sources`, receta en `config/recipes` y catálogo,
+  no agregar otra rama Kotlin. Detalle completo en `docs/REMOTE-RECIPES.md`.
+- `config/catalog.json` + archivos por fuente/receta son la autoría v2; `config.example.json` sigue
+  siendo plantilla v1. Assets `config-v2.json` conservan defaults offline. `tools/config-tool.mjs`
+  valida estructura y prepara bundles inmutables por revisión con manifiesto RSA-SHA256 y hashes.
+  Al cambiar defaults para un APK, sincronizar el asset con `config-v2.json` generado por el bundle.
+- `SignedConfig` verifica clave pública incorporada, firma, integridad y compatibilidad antes de
+  activar. `RemoteConfig` mantiene caché actual/anterior, revisión máxima y StateFlow. Consulta cada
+  cinco minutos cuando el loop de agenda está activo y ofrece actualizar/restaurar manualmente.
+  Una sesión de reproducción conserva su perfil; fuentes nuevas aparecen sin reinicio.
+  Antes del primer manifiesto firmado se admite v1 por HTTPS si manifest devuelve 404; después no.
+- **Seguridad:** `TrustedHttp` con TLS normal descarga config, metadata y APK; no reutilizar ahí
+  `SiteHttp` (scraper heredado con TLS laxo). Clave de config independiente de la del APK, privada
+  fuera del proyecto (`%USERPROFILE%/.pelotalibretv/config-signing.pem`), jamás publicar.
+- Fechas ISO y zonas IANA cuando la fuente proporciona fecha; sin fecha se usan offsets existentes
+  sin inventar día. Evento/señal conservan procedencia y URL final. Error de formato ofrece aviso
+  o last-good en memoria por fuente. La agenda no persiste al matar el proceso; la config sí.
+- Validación real del motor en Television_1080p: las ocho fuentes extraen eventos. AlÁngulo pasó
+  de error de formato horario a 87 eventos/228 señales cambiando solo el JSON (`HH:mm:ss`) sin
+  recompilar el APK instalado. Config firmada de prueba verificada por el motor Android.
+  Muestras locales: JSON con campos renombrados, parámetro `u` + Base64, HTML con selectores
+  nuevos, evento sin señal y cruce de día UTC→Argentina verificados. Array vacío reconocido
+  devuelve vacío; formato desconocido, operación `eval` y firma alterada se rechazan.
+  Esto valida extracción, no todas las transmisiones. `RecipeInspectorActivity` solo existe en
+  debug y permite validar candidatos/muestras sin publicar. No se modificaron GitHub ni la rutina
+  semanal con esta entrega; integrar sus secretos y publicación es un paso operativo separado.
 
 - v0.8 agrega `futbollibrehd.lol` bajo Pelota Libre. `strategy=eventsJson`, `/api/agenda`:
   `events[]` con `title`, `time`, `sport`, `date` y `embeds[]` (`name`, `lang`, `iframe`).

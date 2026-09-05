@@ -25,11 +25,11 @@ class AgendaViewModel : ViewModel() {
     val state: StateFlow<AgendaState> = _state.asStateFlow()
 
     private var job: Job? = null
-    private var currentId: String? = null
+    private var currentSource: Source? = null
 
     fun setSource(source: Source) {
-        if (source.id == currentId) return
-        currentId = source.id
+        if (source == currentSource) return
+        currentSource = source
         job?.cancel()
         _state.value = AgendaState.Loading
         val repository = AgendaRepository(source)

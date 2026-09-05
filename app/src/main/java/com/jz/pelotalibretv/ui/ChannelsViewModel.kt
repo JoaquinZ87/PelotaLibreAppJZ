@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 
 /**
  * Canales de la fuente seleccionada. Expone [loading] además de [channels] para distinguir
@@ -23,14 +24,16 @@ class ChannelsViewModel : ViewModel() {
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private var currentId: String? = null
+    private var currentSource: Source? = null
+    private var job: Job? = null
 
     fun setSource(source: Source) {
-        if (source.id == currentId) return
-        currentId = source.id
+        if (source == currentSource) return
+        currentSource = source
+        job?.cancel()
         _channels.value = emptyList()
         _loading.value = source.channelsEnabled
-        viewModelScope.launch {
+        job = viewModelScope.launch {
             RemoteConfig.ensureFresh()
             _channels.value = ChannelScraper(source).fetchChannels()
             _loading.value = false

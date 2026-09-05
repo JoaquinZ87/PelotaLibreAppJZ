@@ -22,8 +22,23 @@ object EmbedResolver {
     suspend fun resolveChannel(
         pageUrl: String,
         userAgent: String = AppConfig.BROWSER_UA,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+        recipe: String? = null
     ): String? = withContext(ioDispatcher) {
+        if (recipe != null) {
+            return@withContext runCatching {
+                val spec = org.json.JSONObject(recipe)
+                var page = SiteHttp.getPage(pageUrl, userAgent)
+                val steps = spec.optJSONObject("request")?.optJSONArray("follow") ?: org.json.JSONArray()
+                val visited = mutableSetOf(page.url)
+                for (index in 0 until steps.length()) {
+                    val next = RecipeEngine.extractUrl(page.body, page.url, steps.getJSONObject(index)) ?: error("Enlace intermedio ausente")
+                    check(visited.add(next))
+                    page = SiteHttp.getPage(next, userAgent)
+                }
+                RecipeEngine.extractUrl(page.body, page.url, spec)
+            }.getOrNull()
+        }
         // 1) link ?r= directo
         EmbedDecoder.fromHref(pageUrl)?.let { return@withContext it }
         // 2) página de canal -> iframe del player

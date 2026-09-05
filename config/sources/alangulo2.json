@@ -1,0 +1,16 @@
+{
+  "id": "alangulo2",
+  "name": "Al Ángulo TV (2)",
+  "platform": "Al Ángulo TV",
+  "mirrors": [
+    "https://alangulotv.cx"
+  ],
+  "homePath": "/",
+  "agendaPath": "/agenda.php",
+  "sourceUtcOffsetMinutes": 60,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "menuR",
+  "agendaRecipe": "menuR",
+  "resolverRecipe": "iframe"
+}

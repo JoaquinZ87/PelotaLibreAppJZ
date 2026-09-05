@@ -10,19 +10,35 @@ import com.jz.pelotalibretv.domain.model.Source
  */
 class AgendaRepository(source: Source) {
 
+    private val sourceId = source.id
+    companion object {
+        private val cache = java.util.Collections.synchronizedMap(LinkedHashMap<String, List<Event>>())
+    }
+
     private val scraper = AgendaScraper(source)
 
     @Volatile
-    private var lastGood: List<Event>? = null
+    private var lastGood: List<Event>? = cache[sourceId]
 
     suspend fun loadAgenda(): AgendaState {
-        val events = scraper.fetchAgenda()
+        val events = try { scraper.fetchAgenda() } catch (error: RecipeMismatch) {
+            return lastGood?.let { AgendaState.Success(it, stale = true) }
+                ?: AgendaState.Error("La fuente cambió de formato. Revisar su receta.")
+        }
         return when {
             events == null -> lastGood?.let { AgendaState.Success(it, stale = true) }
                 ?: AgendaState.Error("No se pudo conectar con la fuente.")
-            events.isEmpty() -> AgendaState.Success(emptyList(), stale = false)
+            events.isEmpty() -> {
+                lastGood = emptyList()
+                cache[sourceId] = emptyList()
+                AgendaState.Success(emptyList(), stale = false)
+            }
             else -> {
                 lastGood = events
+                synchronized(cache) {
+                    if (cache.size >= 100 && sourceId !in cache) cache.remove(cache.keys.first())
+                    cache[sourceId] = events
+                }
                 AgendaState.Success(events, stale = false)
             }
         }

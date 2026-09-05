@@ -1,0 +1,33 @@
+{
+  "format": "html",
+  "recognize": ".wrap .tabla",
+  "items": "div.match",
+  "allowEmpty": true,
+  "groupByTitle": true,
+  "fields": {
+    "title": {
+      "select": "span.name"
+    },
+    "time": {
+      "select": "span.time"
+    }
+  },
+  "servers": {
+    "items": "div.chans a[href]",
+    "needsResolve": true,
+    "fields": {
+      "name": {
+        "read": "text"
+      },
+      "url": {
+        "read": "attr",
+        "attribute": "href",
+        "transforms": [
+          {
+            "op": "absolute"
+          }
+        ]
+      }
+    }
+  }
+}

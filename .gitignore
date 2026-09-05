@@ -12,3 +12,6 @@
 *.keystore
 *.jks
 keystore.properties
+*.pem
+/config-dist/
+.kotlin/

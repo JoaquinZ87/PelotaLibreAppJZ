@@ -1,0 +1,442 @@
+{
+  "disabledSourceIds": [
+    "pelotalibreuno"
+  ],
+  "playerBlockedHosts": [
+    "cubbiesexcheat.com",
+    "selahsguttate.com",
+    "llvpn.one",
+    "llvpn.com",
+    "sculshbises.com",
+    "greatdexchange.com",
+    "visariomedia.com",
+    "czvtmhty.com",
+    "hdesvtpufcd.com"
+  ],
+  "playerBlockedUrls": [
+    "https://capo8play.com/js/adcashcap8.js"
+  ],
+  "playerAdText": [
+    "my mobile secure vpn",
+    "source b2b product from china",
+    "buy from alibaba, sell to amazon"
+  ],
+  "playerDocumentRules": [
+    {
+      "parentHost": "playvi.org",
+      "playerHost": "capo8play.com",
+      "playerPath": "/capo.php",
+      "referer": "https://playvi.org/"
+    }
+  ],
+  "schemaVersion": 2,
+  "minEngineVersion": 1,
+  "revision": 1,
+  "sources": [
+    {
+      "id": "pelotalibre",
+      "name": "Pelota Libre",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotalibrehd.su"
+      ],
+      "homePath": "/es/",
+      "agendaPath": "/es/agenda/",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menu2",
+      "agendaRecipe": "menu2",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "pelotalibremas",
+      "name": "Pelota Libre +",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotalibre-hd.su"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda2/",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "pelotaalibrela",
+      "name": "Pelota Libre (la)",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotaalibre.la"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "futbollibrehdlol",
+      "name": "Fútbol Libre HD",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://futbollibrehd.lol"
+      ],
+      "homePath": "/",
+      "agendaPath": "/api/agenda",
+      "sourceUtcOffsetMinutes": 0,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "eventsJson",
+      "agendaRecipe": "eventsJson",
+      "resolverRecipe": "iframe",
+      "sourceTimeZone": "UTC"
+    },
+    {
+      "id": "alangulo1",
+      "name": "Al Ángulo TV",
+      "platform": "Al Ángulo TV",
+      "mirrors": [
+        "https://alangulotv.quest"
+      ],
+      "homePath": "/",
+      "agendaPath": "/wp-admin/admin-ajax.php?action=futbol_agenda_data",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "wpjson",
+      "agendaRecipe": "wpjson",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "alangulo2",
+      "name": "Al Ángulo TV (2)",
+      "platform": "Al Ángulo TV",
+      "mirrors": [
+        "https://alangulotv.cx"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "rustico",
+      "name": "Rústico TV",
+      "platform": "Rústico TV",
+      "mirrors": [
+        "https://rusticotv.la",
+        "https://mirusticotv.su",
+        "https://rusticotv.su"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "rojadirecta",
+      "name": "RojaDirecta",
+      "platform": "RojaDirecta",
+      "mirrors": [
+        "https://rojadirecta.st"
+      ],
+      "homePath": "/",
+      "agendaPath": "/programacion/",
+      "sourceUtcOffsetMinutes": 120,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "rows",
+      "eventRowSelector": "div.match",
+      "eventTimeSelector": "span.time",
+      "eventNameSelector": "span.name",
+      "eventLinkSelector": "div.chans a[href]",
+      "agendaRecipe": "rows",
+      "resolverRecipe": "iframe"
+    }
+  ],
+  "recipes": {
+    "menuR": {
+      "format": "html",
+      "recognize": "ul.menu",
+      "items": "ul.menu > li",
+      "allowEmpty": true,
+      "fields": {
+        "title": {
+          "select": "a",
+          "read": "ownText"
+        },
+        "time": {
+          "select": "a span.t"
+        },
+        "category": {
+          "read": "attr",
+          "attribute": "class"
+        }
+      },
+      "servers": {
+        "items": "a[href*='?r=']",
+        "fields": {
+          "name": {
+            "read": "ownText"
+          },
+          "quality": {
+            "select": "span"
+          },
+          "url": {
+            "read": "attr",
+            "attribute": "href",
+            "transforms": [
+              {
+                "op": "query",
+                "value": "r"
+              },
+              {
+                "op": "base64"
+              },
+              {
+                "op": "absolute"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "menu2": {
+      "format": "html",
+      "recognize": "ul#menu",
+      "items": "ul#menu > li",
+      "allowEmpty": true,
+      "timeFormat": "HH:mm:ss",
+      "fields": {
+        "title": {
+          "select": ".info span"
+        },
+        "time": {
+          "select": ".info time",
+          "read": "attr",
+          "attribute": "datetime"
+        },
+        "category": {
+          "read": "attr",
+          "attribute": "data-category"
+        }
+      },
+      "servers": {
+        "items": "a[href*='?r=']",
+        "fields": {
+          "name": {
+            "select": "span"
+          },
+          "url": {
+            "read": "attr",
+            "attribute": "href",
+            "transforms": [
+              {
+                "op": "query",
+                "value": "r"
+              },
+              {
+                "op": "base64"
+              },
+              {
+                "op": "absolute"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "eventsJson": {
+      "format": "json",
+      "recognize": "$.events",
+      "items": "$.events[*]",
+      "allowEmpty": true,
+      "timeFormat": "HH:mm:ss",
+      "fields": {
+        "title": {
+          "select": "$.title"
+        },
+        "time": {
+          "select": "$.time"
+        },
+        "date": {
+          "select": "$.date"
+        },
+        "category": {
+          "select": "$.sport"
+        }
+      },
+      "servers": {
+        "items": "$.embeds[*]",
+        "fields": {
+          "name": {
+            "select": "$.name"
+          },
+          "quality": {
+            "select": "$.lang"
+          },
+          "url": {
+            "select": "$.iframe"
+          }
+        }
+      }
+    },
+    "wpjson": {
+      "format": "json",
+      "recognize": "$.data",
+      "items": "$.data[*]",
+      "allowEmpty": true,
+      "fields": {
+        "title": {
+          "select": "$.title"
+        },
+        "time": {
+          "select": "$.time_raw"
+        },
+        "category": {
+          "select": "$.country"
+        }
+      },
+      "servers": {
+        "items": "$.channels[*]",
+        "fields": {
+          "name": {
+            "select": "$.name"
+          },
+          "url": {
+            "select": "$.stream_url"
+          }
+        }
+      },
+      "timeFormat": "HH:mm:ss"
+    },
+    "strapi": {
+      "format": "json",
+      "recognize": "$.data",
+      "items": "$.data[*].attributes",
+      "allowEmpty": true,
+      "timeFormat": "HH:mm:ss",
+      "fields": {
+        "title": {
+          "select": "$.diary_description"
+        },
+        "time": {
+          "select": "$.diary_hour"
+        }
+      },
+      "servers": {
+        "items": "$.embeds.data[*].attributes",
+        "fields": {
+          "name": {
+            "select": "$.embed_name"
+          },
+          "quality": {
+            "select": "$.idioma"
+          },
+          "url": {
+            "select": "$.embed_iframe",
+            "transforms": [
+              {
+                "op": "query",
+                "value": "r"
+              },
+              {
+                "op": "base64"
+              },
+              {
+                "op": "absolute"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "rows": {
+      "format": "html",
+      "recognize": ".wrap .tabla",
+      "items": "div.match",
+      "allowEmpty": true,
+      "groupByTitle": true,
+      "fields": {
+        "title": {
+          "select": "span.name"
+        },
+        "time": {
+          "select": "span.time"
+        }
+      },
+      "servers": {
+        "items": "div.chans a[href]",
+        "needsResolve": true,
+        "fields": {
+          "name": {
+            "read": "text"
+          },
+          "url": {
+            "read": "attr",
+            "attribute": "href",
+            "transforms": [
+              {
+                "op": "absolute"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "iframe": {
+      "format": "html",
+      "url": {
+        "select": "iframe#plyr, iframe#streamIframe, iframe#embedIframe, .player iframe, #player iframe, #playerContainer iframe",
+        "read": "attr",
+        "attribute": "src"
+      }
+    },
+    "cards": {
+      "format": "html",
+      "recognize": ".cards-container",
+      "items": ".cards-container .card",
+      "allowEmpty": true,
+      "fields": {
+        "title": {
+          "select": "h3"
+        },
+        "category": {
+          "select": "img",
+          "read": "attr",
+          "attribute": "src"
+        }
+      },
+      "servers": {
+        "items": "a[href]:not([href='#'])",
+        "needsResolve": true,
+        "fields": {
+          "url": {
+            "read": "attr",
+            "attribute": "href",
+            "transforms": [
+              {
+                "op": "absolute"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

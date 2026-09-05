@@ -1,0 +1,20 @@
+{
+  "id": "rojadirecta",
+  "name": "RojaDirecta",
+  "platform": "RojaDirecta",
+  "mirrors": [
+    "https://rojadirecta.st"
+  ],
+  "homePath": "/",
+  "agendaPath": "/programacion/",
+  "sourceUtcOffsetMinutes": 120,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "rows",
+  "eventRowSelector": "div.match",
+  "eventTimeSelector": "span.time",
+  "eventNameSelector": "span.name",
+  "eventLinkSelector": "div.chans a[href]",
+  "agendaRecipe": "rows",
+  "resolverRecipe": "iframe"
+}

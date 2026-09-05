@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -39,6 +40,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.jz.pelotalibretv.data.AppConfig
+import com.jz.pelotalibretv.data.RemoteConfig
 import com.jz.pelotalibretv.data.EmbedResolver
 import com.jz.pelotalibretv.data.UpdateChecker
 import com.jz.pelotalibretv.data.UpdateInfo
@@ -60,7 +62,8 @@ fun HomeScreen() {
     val context = LocalContext.current
     val isTv = remember { context.isTvDevice() }
     val activity = remember { context.findActivity() }
-    val sources = remember { AppConfig.sources }
+    val sources by RemoteConfig.sources.collectAsState()
+    val configStatus by RemoteConfig.status.collectAsState()
     // Agrupar fuentes por PLATAFORMA (clave = platform, o name si viene vacío), preservando orden.
     // Cada plataforma es una solapa; sus variantes ("mirrors") se eligen adentro.
     val platforms = remember(sources) {
@@ -80,6 +83,18 @@ fun HomeScreen() {
     var update by remember { mutableStateOf<UpdateInfo?>(null) }
     var updating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(sources, playUrl, opening) {
+        if (playUrl == null && !opening) {
+            val replacement = sources.firstOrNull { it.id == selectedSource.id } ?: sources.first()
+            if (replacement != selectedSource) {
+                selectedSource = replacement
+                lastVariant.clear()
+                serverPicker = null
+                activeEvent = null
+            }
+        }
+    }
 
     // Chequeo de actualización al abrir.
     LaunchedEffect(Unit) {
@@ -126,14 +141,14 @@ fun HomeScreen() {
         if (server.needsResolve) {
             opening = true
             scope.launch {
-                val url = EmbedResolver.resolveChannel(server.embedUrl, selectedSource.userAgent)
+                val url = EmbedResolver.resolveChannel(server.embedUrl, selectedSource.userAgent, recipe = selectedSource.resolverRecipe)
                     ?: server.embedUrl
                 playReferer = server.embedUrl
                 opening = false
                 playUrl = url
             }
         } else {
-            playReferer = agendaReferer
+            playReferer = server.referer.ifBlank { agendaReferer }
             playUrl = server.embedUrl
         }
     }
@@ -147,9 +162,14 @@ fun HomeScreen() {
         val activeVariants = platforms.firstOrNull { it.first == activePlatform }?.second
             ?: listOf(selectedSource)
         Column(modifier = Modifier.fillMaxSize()) {
+            Row(modifier = Modifier.padding(horizontal = 48.dp, vertical = 8.dp)) {
+                Chip("Actualizar fuentes", selected = false) { scope.launch { RemoteConfig.ensureFresh(force = true) } }
+                Chip("Restaurar anterior", selected = false) { scope.launch { RemoteConfig.rollback() } }
+            }
+            Text(configStatus, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 48.dp))
             PlatformSelector(platforms.map { it.first }, activePlatform) { p ->
                 val variants = platforms.firstOrNull { it.first == p }?.second
-                if (variants != null) selectedSource = lastVariant[p] ?: variants.first()
+                if (variants != null) selectedSource = variants.firstOrNull { it.id == lastVariant[p]?.id } ?: variants.first()
             }
             if (activeVariants.size > 1) {
                 VariantSelector(activeVariants, selectedSource) { v ->

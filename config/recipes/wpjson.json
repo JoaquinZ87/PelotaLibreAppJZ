@@ -1,0 +1,29 @@
+{
+  "format": "json",
+  "timeFormat": "HH:mm:ss",
+  "recognize": "$.data",
+  "items": "$.data[*]",
+  "allowEmpty": true,
+  "fields": {
+    "title": {
+      "select": "$.title"
+    },
+    "time": {
+      "select": "$.time_raw"
+    },
+    "category": {
+      "select": "$.country"
+    }
+  },
+  "servers": {
+    "items": "$.channels[*]",
+    "fields": {
+      "name": {
+        "select": "$.name"
+      },
+      "url": {
+        "select": "$.stream_url"
+      }
+    }
+  }
+}

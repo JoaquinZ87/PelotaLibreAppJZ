@@ -1,0 +1,18 @@
+{
+  "id": "rustico",
+  "name": "Rústico TV",
+  "platform": "Rústico TV",
+  "mirrors": [
+    "https://rusticotv.la",
+    "https://mirusticotv.su",
+    "https://rusticotv.su"
+  ],
+  "homePath": "/",
+  "agendaPath": "/agenda.php",
+  "sourceUtcOffsetMinutes": 60,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "menuR",
+  "agendaRecipe": "menuR",
+  "resolverRecipe": "iframe"
+}

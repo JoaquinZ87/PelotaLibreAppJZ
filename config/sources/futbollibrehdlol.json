@@ -1,0 +1,17 @@
+{
+  "id": "futbollibrehdlol",
+  "name": "Fútbol Libre HD",
+  "platform": "Pelota Libre",
+  "mirrors": [
+    "https://futbollibrehd.lol"
+  ],
+  "homePath": "/",
+  "agendaPath": "/api/agenda",
+  "sourceUtcOffsetMinutes": 0,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "eventsJson",
+  "agendaRecipe": "eventsJson",
+  "resolverRecipe": "iframe",
+  "sourceTimeZone": "UTC"
+}

@@ -26,12 +26,12 @@ object UpdateChecker {
         currentVersionCode: Int,
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ): UpdateInfo? = withContext(ioDispatcher) {
-        val json = runCatching { SiteHttp.get(VERSION_URL) }.getOrNull() ?: return@withContext null
+        val json = runCatching { TrustedHttp.get(VERSION_URL) }.getOrNull() ?: return@withContext null
         runCatching {
             val o = JSONObject(json)
             val vc = o.optInt("versionCode", 0)
             val apk = o.optString("apkUrl")
-            if (vc > currentVersionCode && apk.startsWith("http")) {
+            if (vc > currentVersionCode && apk.startsWith("https://")) {
                 UpdateInfo(vc, o.optString("versionName"), apk, o.optString("notes"))
             } else null
         }.getOrNull()

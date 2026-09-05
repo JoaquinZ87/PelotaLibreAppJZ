@@ -15,12 +15,13 @@ import java.io.File
 object Updater {
 
     suspend fun downloadAndInstall(context: Context, apkUrl: String): Boolean {
+        if (!apkUrl.startsWith("https://")) return false
         val ok = withContext(Dispatchers.IO) {
             val file = File(context.cacheDir, "update.apk")
             val req = Request.Builder().url(apkUrl)
                 .header("User-Agent", AppConfig.BROWSER_UA).build()
             runCatching {
-                SiteHttp.client.newCall(req).execute().use { resp ->
+                TrustedHttp.client.newCall(req).execute().use { resp ->
                     if (!resp.isSuccessful) return@runCatching false
                     val body = resp.body ?: return@runCatching false
                     body.byteStream().use { input -> file.outputStream().use { input.copyTo(it) } }

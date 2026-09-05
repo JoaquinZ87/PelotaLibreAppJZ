@@ -1,0 +1,35 @@
+{
+  "format": "json",
+  "recognize": "$.events",
+  "items": "$.events[*]",
+  "allowEmpty": true,
+  "timeFormat": "HH:mm:ss",
+  "fields": {
+    "title": {
+      "select": "$.title"
+    },
+    "time": {
+      "select": "$.time"
+    },
+    "date": {
+      "select": "$.date"
+    },
+    "category": {
+      "select": "$.sport"
+    }
+  },
+  "servers": {
+    "items": "$.embeds[*]",
+    "fields": {
+      "name": {
+        "select": "$.name"
+      },
+      "quality": {
+        "select": "$.lang"
+      },
+      "url": {
+        "select": "$.iframe"
+      }
+    }
+  }
+}

@@ -9,5 +9,8 @@ data class Event(
     val title: String,
     val time: String,
     val category: String,
-    val servers: List<Server>
+    val servers: List<Server>,
+    val date: String = "",
+    val sourceId: String = "",
+    val originUrl: String = ""
 )

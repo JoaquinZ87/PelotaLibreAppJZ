@@ -1,0 +1,16 @@
+{
+  "id": "pelotaalibrela",
+  "name": "Pelota Libre (la)",
+  "platform": "Pelota Libre",
+  "mirrors": [
+    "https://pelotaalibre.la"
+  ],
+  "homePath": "/",
+  "agendaPath": "/agenda.php",
+  "sourceUtcOffsetMinutes": 60,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "menuR",
+  "agendaRecipe": "menuR",
+  "resolverRecipe": "iframe"
+}

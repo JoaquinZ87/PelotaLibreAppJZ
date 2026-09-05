@@ -23,17 +23,32 @@ class AgendaScraper(
 
     suspend fun fetchAgenda(): List<Event>? = withContext(ioDispatcher) {
         var reachedAny = false
+        var recognizedEmpty = false
+        var mismatch: Exception? = null
+        val deadline = System.nanoTime() + 40_000_000_000
         for (mirror in source.mirrors) {
+            if (System.nanoTime() >= deadline) break
             val url = mirror.trimEnd('/') + source.agendaPath
-            val html = runCatching { SiteHttp.get(url, source.userAgent) }.getOrNull() ?: continue
+            val page = try {
+                source.agendaRecipe?.let { RecipeEngine.fetch(source, JSONObject(it), source.agendaPath, mirror, deadline) }
+                    ?: SiteHttp.getPage(url, source.userAgent)
+            } catch (error: Exception) {
+                if (error is RecipeMismatch) mismatch = error
+                continue
+            }
             reachedAny = true
-            val events = parse(html, url)
+            val events = try { parse(page.body, page.url) } catch (error: Exception) { mismatch = error; continue }
             if (events.isNotEmpty()) return@withContext events
+            recognizedEmpty = true
         }
+        if (recognizedEmpty) return@withContext emptyList()
+        if (mismatch != null) throw RecipeMismatch(mismatch.message ?: "Formato no reconocido")
         if (reachedAny) emptyList() else null
     }
 
-    fun parse(html: String, baseUrl: String): List<Event> = when (source.strategy) {
+    fun parse(html: String, baseUrl: String): List<Event> = source.agendaRecipe?.let {
+        RecipeEngine.parse(html, baseUrl, source, JSONObject(it))
+    } ?: when (source.strategy) {
         "rows" -> parseRows(html, baseUrl)
         "menu2" -> parseMenu2(html, baseUrl)
         "wpjson" -> parseWpJson(html)

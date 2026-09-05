@@ -1,0 +1,31 @@
+{
+  "format": "html",
+  "recognize": ".cards-container",
+  "items": ".cards-container .card",
+  "allowEmpty": true,
+  "fields": {
+    "title": {
+      "select": "h3"
+    },
+    "category": {
+      "select": "img",
+      "read": "attr",
+      "attribute": "src"
+    }
+  },
+  "servers": {
+    "items": "a[href]:not([href='#'])",
+    "needsResolve": true,
+    "fields": {
+      "url": {
+        "read": "attr",
+        "attribute": "href",
+        "transforms": [
+          {
+            "op": "absolute"
+          }
+        ]
+      }
+    }
+  }
+}

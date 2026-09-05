@@ -21,14 +21,23 @@ class ChannelScraper(
         if (!source.channelsEnabled) return@withContext emptyList()
         for (mirror in source.mirrors) {
             val url = mirror.trimEnd('/') + source.homePath
-            val html = runCatching { SiteHttp.get(url, source.userAgent) }.getOrNull() ?: continue
-            val channels = parse(html, url)
+            val page = runCatching {
+                source.channelRecipe?.let { RecipeEngine.fetch(source, org.json.JSONObject(it), source.homePath, mirror) }
+                    ?: SiteHttp.getPage(url, source.userAgent)
+            }.getOrNull() ?: continue
+            val channels = runCatching { parse(page.body, page.url) }.getOrNull() ?: continue
             if (channels.isNotEmpty()) return@withContext channels
         }
         emptyList()
     }
 
     fun parse(html: String, baseUrl: String): List<Channel> {
+        source.channelRecipe?.let { recipe ->
+            return RecipeEngine.parse(html, baseUrl, source, org.json.JSONObject(recipe)).mapNotNull { event ->
+                val link = event.servers.firstOrNull()?.embedUrl ?: return@mapNotNull null
+                Channel(event.title, RecipeEngine.url(event.category, baseUrl).orEmpty(), link)
+            }
+        }
         val doc = Jsoup.parse(html, baseUrl)
         return doc.select(source.channelCardSelector).mapNotNull { card ->
             runCatching {

@@ -9,6 +9,40 @@ import com.jz.pelotalibretv.domain.model.Source
  */
 object TimeConverter {
 
+    fun schedule(date: String, time: String, source: Source, format: String): Pair<String, String> {
+        if (time.isBlank()) return date to ""
+        val parser = java.text.SimpleDateFormat(format, java.util.Locale.US).apply {
+            isLenient = false
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+        val position = java.text.ParsePosition(0)
+        val parsed = parser.parse(time, position) ?: throw RecipeMismatch("Hora inválida")
+        if (position.index != time.length) throw RecipeMismatch("Formato de hora incorrecto")
+        val normalized = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }.format(parsed)
+        if (date.isBlank()) return "" to toLocal(normalized, source)
+        fun zone(name: String, offset: Int): java.util.TimeZone = if (name.isBlank()) {
+            java.util.SimpleTimeZone(offset * 60_000, "source")
+        } else {
+            require(name in java.util.TimeZone.getAvailableIDs()) { "Zona horaria desconocida" }
+            java.util.TimeZone.getTimeZone(name)
+        }
+        val fullParser = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).apply {
+            isLenient = false
+            timeZone = zone(source.sourceTimeZone, source.sourceUtcOffsetMinutes)
+        }
+        val input = "$date $normalized"
+        val fullPosition = java.text.ParsePosition(0)
+        val instant = fullParser.parse(input, fullPosition) ?: throw RecipeMismatch("Fecha inválida")
+        require(fullPosition.index == input.length)
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).apply {
+            timeZone = zone(source.targetTimeZone, source.targetUtcOffsetMinutes)
+        }
+        val output = formatter.format(instant)
+        return output.substringBefore(' ') to output.substringAfter(' ')
+    }
+
     /** "HH:mm" de la fuente -> hora de destino. Si no puede, devuelve el original. */
     fun toLocal(raw: String, source: Source): String {
         val parts = raw.split(":")

@@ -104,6 +104,7 @@ private fun EventRow(event: Event, onClick: () -> Unit) {
             .clickable { if (hasSignal) onClick() }
             .padding(horizontal = 20.dp, vertical = 14.dp)
     ) {
+        if (event.date.isNotBlank()) Text(event.date, color = fg, style = MaterialTheme.typography.labelSmall)
         Text(
             text = if (event.time.isNotEmpty()) "${event.time}   ${event.title}" else event.title,
             color = fg,

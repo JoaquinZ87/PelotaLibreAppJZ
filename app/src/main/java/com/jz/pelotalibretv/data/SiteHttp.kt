@@ -2,6 +2,7 @@ package com.jz.pelotalibretv.data
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -32,6 +33,7 @@ object SiteHttp {
         OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
+            .callTimeout(25, TimeUnit.SECONDS)
             .sslSocketFactory(ssl.socketFactory, trustAll)
             .hostnameVerifier { _, _ -> true }
             .build()
@@ -44,20 +46,27 @@ object SiteHttp {
         Regex("""(?i)(?:window\.)?location(?:\.href|\.replace)?\s*[=(]\s*["'](https?://[^"']+)["']""")
 
     /** GET siguiendo hasta 4 saltos de redirección (HTTP + meta/JS). Lanza excepción si no es 2xx. */
-    fun get(url: String, userAgent: String = AppConfig.BROWSER_UA): String {
+    data class Page(val body: String, val url: String)
+
+    fun get(url: String, userAgent: String = AppConfig.BROWSER_UA): String = getPage(url, userAgent).body
+
+    fun getPage(url: String, userAgent: String = AppConfig.BROWSER_UA): Page {
         var current = url
+        val visited = mutableSetOf<String>()
         repeat(4) {
-            val html = rawGet(current, userAgent)
+            check(visited.add(current)) { "Ciclo de redirecciones" }
+            val page = rawGet(current, userAgent)
+            val html = page.body
             // Solo seguimos meta/JS en páginas CHICAS (stubs de redirección). Las páginas con
             // contenido real (agenda/canales) son grandes y se devuelven tal cual.
             val next = if (html.length < 4000) redirectTarget(html) else null
-            if (next == null || next == current) return html
-            current = next
+            if (next == null) return page
+            current = page.url.toHttpUrl().resolve(next)?.toString() ?: error("Redirección inválida")
         }
-        return rawGet(current, userAgent)
+        error("Demasiadas redirecciones")
     }
 
-    private fun rawGet(url: String, userAgent: String): String {
+    private fun rawGet(url: String, userAgent: String): Page {
         val origin = ORIGIN.find(url)?.value ?: url
         val req = Request.Builder()
             .url(url)
@@ -68,7 +77,12 @@ object SiteHttp {
             .build()
         client.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
-            return resp.body?.string().orEmpty()
+            val body = resp.body ?: error("Respuesta vacía")
+            val buffer = okio.Buffer()
+            val input = body.source()
+            while (buffer.size <= 4_000_000 && input.read(buffer, minOf(8192L, 4_000_001 - buffer.size)) != -1L) { }
+            check(buffer.size <= 4_000_000) { "Documento demasiado grande" }
+            return Page(buffer.readUtf8(), resp.request.url.toString())
         }
     }
 

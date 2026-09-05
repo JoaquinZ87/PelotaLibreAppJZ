@@ -41,6 +41,7 @@ import androidx.tv.material3.Text
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.jz.pelotalibretv.data.AppConfig
+import com.jz.pelotalibretv.data.ConfigCodec
 import com.jz.pelotalibretv.data.PlayerAdFilter
 import com.jz.pelotalibretv.data.PlayerDocumentInterceptor
 import java.util.concurrent.atomic.AtomicBoolean
@@ -51,17 +52,18 @@ import java.util.concurrent.atomic.AtomicBoolean
 fun PlayerScreen(embedUrl: String, referer: String, onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     val context = LocalContext.current
+    val profile = remember(embedUrl, referer) { ConfigCodec.active }
     val active = remember(embedUrl, referer) { AtomicBoolean(true) }
     var loadError by remember(embedUrl, referer) { mutableStateOf<String?>(null) }
     val retryFocus = remember { FocusRequester() }
     LaunchedEffect(loadError) { if (loadError != null) retryFocus.requestFocus() }
     val documentInterceptor = remember(embedUrl, referer) {
-        PlayerDocumentInterceptor(embedUrl, AppConfig.playerDocumentRules)
+        PlayerDocumentInterceptor(embedUrl, profile?.documentRules ?: AppConfig.playerDocumentRules)
     }
     val adFilter = remember(embedUrl, referer) {
-        PlayerAdFilter(AppConfig.playerBlockedHosts, AppConfig.playerBlockedUrls)
+        PlayerAdFilter(profile?.blockedHosts ?: AppConfig.playerBlockedHosts, profile?.blockedUrls ?: AppConfig.playerBlockedUrls)
     }
-    val script = remember(embedUrl, referer) { playerScript(AppConfig.playerAdText) }
+    val script = remember(embedUrl, referer) { playerScript(profile?.adText ?: AppConfig.playerAdText) }
     val headers = remember(referer) {
         if (referer.isNotBlank()) mapOf("Referer" to referer) else emptyMap()
     }

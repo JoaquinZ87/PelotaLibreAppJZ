@@ -12,5 +12,6 @@ data class Server(
     val quality: String,
     val embedUrl: String,
     /** true (Familia B): [embedUrl] es una página de detalle a resolver (sacar iframe) antes de reproducir. */
-    val needsResolve: Boolean = false
+    val needsResolve: Boolean = false,
+    val referer: String = ""
 )

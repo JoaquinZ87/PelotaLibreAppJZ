@@ -1,0 +1,46 @@
+{
+  "format": "html",
+  "recognize": "ul.menu",
+  "items": "ul.menu > li",
+  "allowEmpty": true,
+  "fields": {
+    "title": {
+      "select": "a",
+      "read": "ownText"
+    },
+    "time": {
+      "select": "a span.t"
+    },
+    "category": {
+      "read": "attr",
+      "attribute": "class"
+    }
+  },
+  "servers": {
+    "items": "a[href*='?r=']",
+    "fields": {
+      "name": {
+        "read": "ownText"
+      },
+      "quality": {
+        "select": "span"
+      },
+      "url": {
+        "read": "attr",
+        "attribute": "href",
+        "transforms": [
+          {
+            "op": "query",
+            "value": "r"
+          },
+          {
+            "op": "base64"
+          },
+          {
+            "op": "absolute"
+          }
+        ]
+      }
+    }
+  }
+}

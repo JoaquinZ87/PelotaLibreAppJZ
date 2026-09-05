@@ -37,5 +37,10 @@ data class Source(
     // Agrupa variantes bajo una misma solapa (plataforma). Vacío => se usa `name` como plataforma
     // (comportamiento viejo: cada fuente es su propia solapa). Las variantes de una plataforma se
     // eligen adentro de la solapa; cada una conserva su propio `mirrors` (fallback de dominios).
-    val platform: String = ""
+    val platform: String = "",
+    val agendaRecipe: String? = null,
+    val channelRecipe: String? = null,
+    val resolverRecipe: String? = null,
+    val sourceTimeZone: String = "",
+    val targetTimeZone: String = "America/Argentina/Buenos_Aires"
 )

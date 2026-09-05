@@ -1,0 +1,55 @@
+{
+  "disabledSourceIds": [
+    "pelotalibreuno"
+  ],
+  "playerBlockedHosts": [
+    "cubbiesexcheat.com",
+    "selahsguttate.com",
+    "llvpn.one",
+    "llvpn.com",
+    "sculshbises.com",
+    "greatdexchange.com",
+    "visariomedia.com",
+    "czvtmhty.com",
+    "hdesvtpufcd.com"
+  ],
+  "playerBlockedUrls": [
+    "https://capo8play.com/js/adcashcap8.js"
+  ],
+  "playerAdText": [
+    "my mobile secure vpn",
+    "source b2b product from china",
+    "buy from alibaba, sell to amazon"
+  ],
+  "playerDocumentRules": [
+    {
+      "parentHost": "playvi.org",
+      "playerHost": "capo8play.com",
+      "playerPath": "/capo.php",
+      "referer": "https://playvi.org/"
+    }
+  ],
+  "schemaVersion": 2,
+  "minEngineVersion": 1,
+  "revision": 1,
+  "sourceFiles": [
+    "sources/pelotalibre.json",
+    "sources/pelotalibremas.json",
+    "sources/pelotaalibrela.json",
+    "sources/futbollibrehdlol.json",
+    "sources/alangulo1.json",
+    "sources/alangulo2.json",
+    "sources/rustico.json",
+    "sources/rojadirecta.json"
+  ],
+  "recipeFiles": [
+    "recipes/menuR.json",
+    "recipes/menu2.json",
+    "recipes/eventsJson.json",
+    "recipes/wpjson.json",
+    "recipes/strapi.json",
+    "recipes/rows.json",
+    "recipes/iframe.json",
+    "recipes/cards.json"
+  ]
+}

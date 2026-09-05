@@ -1,0 +1,8 @@
+{
+  "format": "html",
+  "url": {
+    "select": "iframe#plyr, iframe#streamIframe, iframe#embedIframe, .player iframe, #player iframe, #playerContainer iframe",
+    "read": "attr",
+    "attribute": "src"
+  }
+}
