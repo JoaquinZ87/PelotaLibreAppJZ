@@ -8,7 +8,46 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
 > Este archivo es la fuente de verdad del proyecto. **Mantenerlo vivo**: actualizar el estado de los
 > módulos y las decisiones cada vez que cambie algo relevante.
 >
-> Última revisión contra el código: **jul/2026** (v0.2, `versionCode 2`).
+> Última revisión: **sep/2026** (v0.8, `versionCode 8`). Las secciones históricas
+> conservan decisiones de julio; para el player prevalece la actualización siguiente.
+
+## Actualización del reproductor — septiembre 2026
+
+- v0.8 agrega `futbollibrehd.lol` bajo Pelota Libre. `strategy=eventsJson`, `/api/agenda`:
+  `events[]` con `title`, `time`, `sport`, `date` y `embeds[]` (`name`, `lang`, `iframe`).
+  URLs HTTP(S) directas, sin resolver página intermedia; se conservan eventos sin señales.
+  La web interpreta `time` con `setUTCHours`: offset configurado 0 hacia Argentina -180,
+  no Perú. La fecha aún no se muestra (limitación compartida del modelo Event).
+  Adaptador defensivo por evento y señal; no cambia los parsers anteriores.
+  Requiere APK 0.8; agregar solo el JSON no habilita esta estrategia en builds viejas.
+  Verificado en Television_1080p: variante visible después de cargar config remoto y agenda
+  con títulos, horas y múltiples señales (Athletic/Atlético: 4). Config remoto actualizado
+  con esta fuente; APK 0.8 compilado localmente, no publicado todavía. Reproducción de esta
+  fuente nueva no validada en esta prueba.
+
+- `PlayerScripts` usa AndroidX WebKit 1.12.1 (`DOCUMENT_START_SCRIPT`, chequeado en runtime)
+  para instalar autoplay en cada frame, incluidos los cross-origin. No expone ningún bridge
+  nativo ni cambia CSP, Origin o TLS. WebViews antiguos conservan solo el fallback del documento
+  principal. El script arranca videos visibles; una vez iniciados respeta su pausa manual.
+- Se retiró el borrado indiscriminado de elementos fixed/absolute y los clicks sobre contenedores:
+  podían ocultar controles o activar anuncios. Ahora solo se ocultan paneles con textos publicitarios
+  específicos de `playerAdText`, protegiendo contenedores con video/iframe.
+- `PlayerAdFilter` bloquea hosts publicitarios exactos y subdominios, o URLs exactas sin query,
+  mediante `playerBlockedHosts` y `playerBlockedUrls`. No hay proxy general de HLS/CDN.
+  Popups se rechazan con `setSupportMultipleWindows(true)` + `onCreateWindow=false`, evitando
+  que nuevas ventanas reutilicen la principal. Diálogos JS alert/confirm se cancelan.
+- Los errores de carga del documento principal ofrecen Reintentar/Volver con foco D-pad.
+- Se quitó `pelotalibreuno` de defaults/plantilla. `disabledSourceIds` también la filtra cuando
+  el JSON remoto/cache antiguo todavía la contiene; el JSON puede reemplazar esa lista.
+  Las listas opcionales ausentes conservan defaults; `[]` desactiva sus reglas.
+- Prueba real 05/09/2026, AVD Television_1080p: Playvi/Liga1Max → Capo reproduce (960x540);
+  streamxhd/DSports reproduce (1024x576) sin aviso VPN; streamx061/Canal5MX reproduce (1024x576)
+  sin cartel Alibaba. Se comprobaron estado de video y capturas ADB, no solo carga HTML.
+  La señal disney1 de streamx061 falló con error de red HLS; no se declara operativa.
+  Audio desmuteado según DOM; no se verificó auditivamente. No garantiza todos los embeds.
+- `PlayerTestActivity` solo existe en debug y admite `--es embedUrl https://... --es referer https://...`.
+  `tools/inspect-webview.mjs` usa el puerto CDP local reenviado por ADB para verificar frames/video.
+  Las capturas CDP pueden salir negras por la superficie de video: usar `adb shell screencap`.
 
 ---
 
@@ -353,6 +392,15 @@ https://Codex.ai/code/routines (id `trig_018CSjpDQmmEimgJDZJYHws5`).
 ---
 
 ## 8. Gotchas confirmados
+
+- Sep/2026: `PlayerDocumentInterceptor` corrige solamente el Referer del documento hijo
+  configurado por `playerDocumentRules` (defaults en AppConfig, JSON remoto opcional; `[]`
+  desactiva las reglas). Default: padre playvi.org → capo8play.com/capo.php. Conserva iframe,
+  CSP, TLS normal y navegación anti-popup; no intercepta HLS ni cambia Origin. Ante fallo,
+  redirección, cookies nuevas o HTML mayor de 1 MiB deja cargar al WebView. El endpoint entregó
+  player con Referer playvi y rechazo con Referer pelotalibrehd/sin Referer. Esto no demuestra
+  reproducción en TV: requiere prueba en dispositivo. No envolver playvi bajo pelotalibrehd:
+  la CSP frame-ancestors observada no lo permite.
 
 - Sin `touchscreen required=false` → la app **no aparece** en el launcher de TV (error #1).
 - Banner debe ser exactamente **320x180** y contener el nombre como texto, o el tile sale vacío.

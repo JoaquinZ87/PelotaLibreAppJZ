@@ -1,5 +1,17 @@
 {
   "_comment": "Config remota multi-fuente. Editá esto en tu repo de GitHub para agregar/arreglar/quitar sitios SIN recompilar. 'platform' agrupa variantes bajo una misma solapa (la UI muestra una solapa por plataforma y adentro deja cambiar entre variantes/mirrors por dominio). strategy: 'menuR' (Familia A: ul.menu + ?r=), 'menu2' (Familia A rediseñada: ul#menu + div.info + ul.submenu), 'wpjson' (plantilla WordPress nueva: JSON en /wp-admin/admin-ajax.php?action=futbol_agenda_data) o 'rows' (Familia B: fila->detalle->iframe). Si falta 'sources', la app usa sus defaults.",
+  "disabledSourceIds": ["pelotalibreuno"],
+  "playerBlockedHosts": ["cubbiesexcheat.com", "selahsguttate.com", "llvpn.one", "llvpn.com", "sculshbises.com", "greatdexchange.com", "visariomedia.com", "czvtmhty.com", "hdesvtpufcd.com"],
+  "playerBlockedUrls": ["https://capo8play.com/js/adcashcap8.js"],
+  "playerAdText": ["my mobile secure vpn", "source b2b product from china", "buy from alibaba, sell to amazon"],
+  "playerDocumentRules": [
+    {
+      "parentHost": "playvi.org",
+      "playerHost": "capo8play.com",
+      "playerPath": "/capo.php",
+      "referer": "https://playvi.org/"
+    }
+  ],
   "sources": [
     {
       "id": "pelotalibre", "name": "Pelota Libre", "platform": "Pelota Libre",
@@ -16,18 +28,18 @@
       "channelsEnabled": false, "strategy": "menuR"
     },
     {
-      "id": "pelotalibreuno", "name": "Pelota Libre (uno)", "platform": "Pelota Libre",
-      "mirrors": ["https://pelotalibre.uno"],
-      "homePath": "/", "agendaPath": "/agenda-data.php",
-      "sourceUtcOffsetMinutes": -300, "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false, "strategy": "strapi"
-    },
-    {
       "id": "pelotaalibrela", "name": "Pelota Libre (la)", "platform": "Pelota Libre",
       "mirrors": ["https://pelotaalibre.la"],
       "homePath": "/", "agendaPath": "/agenda.php",
       "sourceUtcOffsetMinutes": 60, "targetUtcOffsetMinutes": -180,
       "channelsEnabled": false, "strategy": "menuR"
+    },
+    {
+      "id": "futbollibrehdlol", "name": "Fútbol Libre HD", "platform": "Pelota Libre",
+      "mirrors": ["https://futbollibrehd.lol"],
+      "homePath": "/", "agendaPath": "/api/agenda",
+      "sourceUtcOffsetMinutes": 0, "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false, "strategy": "eventsJson"
     },
     {
       "id": "alangulo1", "name": "Al Ángulo TV", "platform": "Al Ángulo TV",

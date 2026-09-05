@@ -1,6 +1,7 @@
 package com.jz.pelotalibretv.data
 
 import com.jz.pelotalibretv.domain.model.Source
+import com.jz.pelotalibretv.domain.model.PlayerDocumentRule
 
 /**
  * Config por defecto (FALLBACK). La lista real de FUENTES vive en el config.json remoto
@@ -11,6 +12,27 @@ import com.jz.pelotalibretv.domain.model.Source
  * Zonas base: AlÁngulo1 = Perú (-300); Rústico/AlÁngulo2 = UTC+1 (60); RojaDirecta = España (120).
  */
 object AppConfig {
+
+    @Volatile
+    var disabledSourceIds = setOf("pelotalibreuno")
+
+    @Volatile
+    var playerBlockedHosts = setOf(
+        "cubbiesexcheat.com", "selahsguttate.com", "llvpn.one", "llvpn.com",
+        "sculshbises.com", "greatdexchange.com", "visariomedia.com",
+        "czvtmhty.com", "hdesvtpufcd.com"
+    )
+
+    @Volatile
+    var playerBlockedUrls = setOf("https://capo8play.com/js/adcashcap8.js")
+
+    @Volatile
+    var playerAdText = listOf("my mobile secure vpn", "source b2b product from china", "buy from alibaba, sell to amazon")
+
+    @Volatile
+    var playerDocumentRules: List<PlayerDocumentRule> = listOf(
+        PlayerDocumentRule("playvi.org", "capo8play.com", "/capo.php", "https://playvi.org/")
+    )
 
     const val refreshIntervalMs = 45_000L
 
@@ -41,16 +63,6 @@ object AppConfig {
             strategy = "menuR", platform = "Pelota Libre"
         ),
         Source(
-            id = "pelotalibreuno", name = "Pelota Libre (uno)",
-            mirrors = listOf("https://pelotalibre.uno"),
-            homePath = "/", agendaPath = "/agenda-data.php", userAgent = BROWSER_UA,
-            sourceUtcOffsetMinutes = -300, targetUtcOffsetMinutes = -180, // strapi JSON, base Perú
-            channelsEnabled = false,
-            channelCardSelector = "", channelNameSelector = "",
-            channelLogoSelector = "", channelLinkSelector = "",
-            strategy = "strapi", platform = "Pelota Libre"
-        ),
-        Source(
             id = "pelotaalibrela", name = "Pelota Libre (la)",
             mirrors = listOf("https://pelotaalibre.la"),
             homePath = "/", agendaPath = "/agenda.php", userAgent = BROWSER_UA,
@@ -59,6 +71,16 @@ object AppConfig {
             channelCardSelector = "", channelNameSelector = "",
             channelLogoSelector = "", channelLinkSelector = "",
             strategy = "menuR", platform = "Pelota Libre"
+        ),
+        Source(
+            id = "futbollibrehdlol", name = "Fútbol Libre HD",
+            mirrors = listOf("https://futbollibrehd.lol"),
+            homePath = "/", agendaPath = "/api/agenda", userAgent = BROWSER_UA,
+            sourceUtcOffsetMinutes = 0, targetUtcOffsetMinutes = -180,
+            channelsEnabled = false,
+            channelCardSelector = "", channelNameSelector = "",
+            channelLogoSelector = "", channelLinkSelector = "",
+            strategy = "eventsJson", platform = "Pelota Libre"
         ),
         Source(
             id = "alangulo1", name = "Al Ángulo TV",

@@ -25,8 +25,8 @@ android {
         applicationId = "com.jz.pelotalibretv"
         minSdk = 23
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.6"
+        versionCode = 8
+        versionName = "0.8"
     }
 
     signingConfigs {
@@ -72,6 +72,7 @@ kotlin {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.webkit)
 
     // Compose (versiones gestionadas por el BOM)
     implementation(platform(libs.androidx.compose.bom))

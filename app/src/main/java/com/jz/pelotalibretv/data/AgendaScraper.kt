@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.jsoup.Jsoup
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
  * Baja y parsea la agenda de una [Source]. Dos estrategias:
@@ -37,7 +38,39 @@ class AgendaScraper(
         "menu2" -> parseMenu2(html, baseUrl)
         "wpjson" -> parseWpJson(html)
         "strapi" -> parseStrapi(html)
+        "eventsJson" -> parseEventsJson(html)
         else -> parseMenu(html, baseUrl)
+    }
+
+    private fun parseEventsJson(json: String): List<Event> {
+        val entries = runCatching { JSONObject(json).optJSONArray("events") }.getOrNull()
+            ?: return emptyList()
+        return (0 until entries.length()).mapNotNull { index ->
+            runCatching eventParse@{
+                val entry = entries.optJSONObject(index) ?: return@eventParse null
+                val title = entry.optString("title").trim()
+                if (title.isEmpty() || title == "null") return@eventParse null
+                val embeds = entry.optJSONArray("embeds")
+                val servers = (0 until (embeds?.length() ?: 0)).mapNotNull { serverIndex ->
+                    runCatching serverParse@{
+                        val embed = embeds?.optJSONObject(serverIndex) ?: return@serverParse null
+                        val url = embed.optString("iframe").toHttpUrlOrNull() ?: return@serverParse null
+                        if (url.username.isNotEmpty() || url.password.isNotEmpty()) return@serverParse null
+                        Server(
+                            name = embed.optString("name").trim().takeUnless { it.isEmpty() || it == "null" } ?: "Canal",
+                            quality = embed.optString("lang").trim().takeUnless { it == "null" }.orEmpty(),
+                            embedUrl = url.toString()
+                        )
+                    }.getOrNull()
+                }
+                Event(
+                    title = title,
+                    time = TimeConverter.toLocal(entry.optString("time").take(5), source),
+                    category = entry.optString("sport").takeUnless { it == "null" }.orEmpty(),
+                    servers = servers
+                )
+            }.getOrNull()
+        }
     }
 
     /**

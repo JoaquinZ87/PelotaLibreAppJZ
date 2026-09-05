@@ -3,6 +3,8 @@ package com.jz.pelotalibretv.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.jz.pelotalibretv.domain.model.Source
+import com.jz.pelotalibretv.domain.model.PlayerDocumentRule
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -60,10 +62,31 @@ object RemoteConfig {
 
     /** Parsea el JSON y pisa AppConfig.sources. Devuelve true si obtuvo al menos una fuente. */
     private fun applyJson(json: String): Boolean = runCatching {
-        val arr = JSONObject(json).optJSONArray("sources") ?: return@runCatching false
+        val root = JSONObject(json)
+        val arr = root.optJSONArray("sources") ?: return@runCatching false
+        fun strings(key: String): List<String>? = root.optJSONArray(key)?.let { values ->
+            (0 until values.length()).map { values.optString(it).trim() }.filter { it.isNotEmpty() }
+        }
+        val disabledIds = strings("disabledSourceIds")?.toSet() ?: AppConfig.disabledSourceIds
+        val ruleArray = root.optJSONArray("playerDocumentRules")
+        val rules = ruleArray?.let { entries ->
+            (0 until entries.length()).mapNotNull { index ->
+                val entry = entries.optJSONObject(index) ?: return@mapNotNull null
+                val parentHost = entry.optString("parentHost")
+                val playerHost = entry.optString("playerHost")
+                val path = entry.optString("playerPath")
+                val referer = entry.optString("referer").toHttpUrlOrNull() ?: return@mapNotNull null
+                if (!referer.isHttps || referer.host != parentHost || referer.port != 443 ||
+                    referer.username.isNotEmpty() || referer.password.isNotEmpty() ||
+                    playerHost.isBlank() || !path.startsWith("/")
+                ) return@mapNotNull null
+                PlayerDocumentRule(parentHost, playerHost, path, referer.toString())
+            }
+        }
         val list = mutableListOf<Source>()
         for (i in 0 until arr.length()) {
             val o = arr.optJSONObject(i) ?: continue
+            if (o.optString("id") in disabledIds) continue
             val mirrorsArr = o.optJSONArray("mirrors") ?: continue
             val mirrors = (0 until mirrorsArr.length())
                 .map { mirrorsArr.optString(it).trim() }
@@ -93,6 +116,11 @@ object RemoteConfig {
         }
         if (list.isNotEmpty()) {
             AppConfig.sources = list
+            AppConfig.disabledSourceIds = disabledIds
+            strings("playerBlockedHosts")?.let { AppConfig.playerBlockedHosts = it.map(String::lowercase).toSet() }
+            strings("playerBlockedUrls")?.let { AppConfig.playerBlockedUrls = it.toSet() }
+            strings("playerAdText")?.let { AppConfig.playerAdText = it }
+            if (rules != null) AppConfig.playerDocumentRules = rules
             true
         } else {
             false
