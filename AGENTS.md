@@ -22,7 +22,9 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
   Requiere APK 0.8; agregar solo el JSON no habilita esta estrategia en builds viejas.
   Verificado en Television_1080p: variante visible después de cargar config remoto y agenda
   con títulos, horas y múltiples señales (Athletic/Atlético: 4). Config remoto actualizado
-  con esta fuente; APK 0.8 compilado localmente, no publicado todavía. Reproducción de esta
+  con esta fuente; APK 0.8 firmado publicado en `pelotalibretv-config/releases/tag/v8`,
+  con SHA-256 verificado y la misma firma que v0.6. `version.json` anuncia versionCode 8;
+  config remoto incluye las reglas del player y elimina `.uno`. Reproducción de esta
   fuente nueva no validada en esta prueba.
 
 - `PlayerScripts` usa AndroidX WebKit 1.12.1 (`DOCUMENT_START_SCRIPT`, chequeado en runtime)
