@@ -8,7 +8,8 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
 > Este archivo es la fuente de verdad del proyecto. **Mantenerlo vivo**: actualizar el estado de los
 > módulos y las decisiones cada vez que cambie algo relevante.
 >
-> Última revisión contra el código: **jul/2026** (v0.2, `versionCode 2`).
+> Última revisión contra el código: **sept/2026** (v0.9, `versionCode 9`). Ver §3.bis para el motor de
+> recipes + el arreglo del "Player privado" (capo8play) que hizo ChatGPT.
 
 ---
 
@@ -108,7 +109,7 @@ Capas y archivos reales:
 - **Reproducción nativa (M5, NO agregada aún):** Media3 ExoPlayer (`media3-exoplayer`,
   `media3-exoplayer-hls`, `media3-ui`). HLS sin DRM, sin config extra.
 - **Build:** compileSdk **35**, targetSdk **35**, **minSdk 23**. `applicationId` = `namespace` =
-  **`com.jz.pelotalibretv`**. Versión actual: `versionCode 2` / `versionName "0.2"`.
+  **`com.jz.pelotalibretv`**. Versión actual: `versionCode 9` / `versionName "0.9"`.
   **AGP 9.3.0 + Kotlin 2.2.10** (Android Studio Q2-2026 auto-actualiza AGP/Gradle al abrir el
   proyecto; dejar lo que ponga y reflejarlo acá).
 - **Java:** `sourceCompatibility`/`targetCompatibility` = **17** y `jvmTarget = 17` (DSL nueva
@@ -204,6 +205,53 @@ viene JSON `null`, `optString` devuelve la string `"null"` (se filtra a "").
 > **Pelota Libre = 4 variantes** (sept/2026), todas bajo la solapa "Pelota Libre" (se elige por dominio):
 > `pelotalibrehd.su` (menu2, Perú) · `pelotalibre-hd.su` (menuR, Perú) · `pelotalibre.uno` (strapi, Perú) ·
 > `pelotaalibre.la` (menuR, **UTC+1** — el crudo sin JS da UTC+1; el navegador convierte con `horario.js`).
+
+## 3.bis — Motor de "recipes" + arreglos de reproducción (hecho por ChatGPT, sept/2026, v0.9)
+
+Todo lo de esta sección lo resolvió **ChatGPT/Astra**, no Claude. Es lo que destrabó el "Player privado"
+y, de paso, sacó al proyecto de tener que escribir una `strategy` de Kotlin por cada sitio nuevo.
+
+### El arreglo del "Player privado" (capo8play) — `PlayerDocumentInterceptor`
+El problema (que Claude no pudo): embeds tipo `playvi.org/liga1max.php` cargan el player desde
+`capo8play.com` (`capo.js` + un `fid`) y **capo8play rechaza reproducir** ("Player privado") porque
+valida el **Referer del documento del player**. Setear el Referer del documento TOP no alcanza: la
+sub-request a `capo8play.com/capo.php` sale con el Referer equivocado.
+**Solución:** en `PlayerScreen` → `WebViewClient.shouldInterceptRequest`, `PlayerDocumentInterceptor`
+detecta esa sub-request (por `playerHost`+`playerPath`) cuando el embed pertenece a un `parentHost`
+conocido, la **re-descarga con OkHttp poniéndole el `Referer` del sitio padre** (ej `https://playvi.org/`)
+y devuelve el HTML como `WebResourceResponse`. Así capo8play "ve" el Referer correcto y reproduce.
+Config: `playerDocumentRules: [{ parentHost, playerHost, playerPath, referer }]` en `config.json`
+(y default en `AppConfig.playerDocumentRules`). Guardas de seguridad: solo `https` + `GET` +
+no-main-frame + código 200 + sin `Set-Cookie` + `text/html` + < 1 MB.
+
+### Motor de recipes (`RecipeEngine`) — scraping declarativo por CONFIG
+Reemplaza la necesidad de codear una `strategy` nueva por sitio. Una **"recipe" JSON** en
+`Source.agendaRecipe` (y `channelRecipe` / `resolverRecipe`) describe cómo scrapear:
+- `format`: `"html"` (selectores CSS Jsoup) o `"json"` (rutas tipo `$.data[*].title`).
+- `items` (cada evento), `recognize` (confirma que el formato matchea; si no → `RecipeMismatch`),
+  `fields` (`title`/`time`/`date`/`category`) y `servers` (`items` + `fields.url/name/quality`).
+- **Pipeline de transforms** por campo: `trim`, `query` (saca un query param), `base64`, `urlDecode`,
+  `absolute`, `before`, `after`, `replace`, `default`.
+- `request.follow` (hasta 3 saltos a páginas intermedias), `groupByTitle`, `timeFormat`.
+Si una fuente trae `agendaRecipe`, `AgendaScraper` la usa en vez de las strategies hardcodeadas. O sea:
+**un sitio con estructura nueva ahora se agrega editando el JSON remoto, sin recompilar** (esto es lo que
+antes se marcaba como "NECESITA CAMBIO DE CÓDIGO"). Las strategies viejas (`menuR`/`menu2`/`wpjson`/
+`strapi`/`rows`/`eventsJson`) siguen como fallback cuando no hay recipe.
+
+### Otros agregados de ChatGPT
+- **Blocklist de ads a nivel red (`PlayerAdFilter`):** hosts/URLs de anuncios → respuesta vacía en
+  `shouldInterceptRequest` (cumple el pendiente de M3). Se combina con el mata-overlays por JS.
+- **Config firmada opcional (`SignedConfig` + `TrustedHttp` + `ConfigCodec`):** un `manifest.json`
+  firmado (RSA `SHA256withRSA`, `schemaVersion 2`) que lista bundles con su `sha256`; se verifica con
+  una clave pública antes de aplicar. Config remota **a prueba de manipulación** (TrustedHttp usa TLS
+  estricto, NO el SSL laxo de `SiteHttp`).
+- **RemoteConfig reactivo:** `sources` y `status` son `StateFlow` (la UI se actualiza en vivo, ya no
+  hace falta reabrir); `ensureFresh(force=true)` y `rollback()` (volver a la config anterior), con los
+  chips **"Actualizar fuentes"** y **"Restaurar anterior"** en `HomeScreen`.
+- **Campos nuevos:** `Server.referer` (Referer por señal), `Source.sourceTimeZone`/`targetTimeZone`
+  (zonas horarias IANA con DST, ej `America/Argentina/Buenos_Aires`), `Source.agendaRecipe`/
+  `channelRecipe`/`resolverRecipe`.
+- Dependencia `androidx.webkit`. `versionCode 9` / `versionName "0.9"`.
 
 ### Familia B — `strategy = "rows"` (RojaDirecta, Tarjeta Roja)
 
