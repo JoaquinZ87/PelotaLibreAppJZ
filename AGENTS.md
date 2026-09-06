@@ -8,7 +8,7 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
 > Este archivo es la fuente de verdad del proyecto. **Mantenerlo vivo**: actualizar el estado de los
 > módulos y las decisiones cada vez que cambie algo relevante.
 >
-> Última revisión: **sep/2026** (v0.9 local, `versionCode 9`; publicada: v0.8). Las secciones históricas
+> Última revisión: **06/sep/2026** (v0.9 publicada, `versionCode 9`). Las secciones históricas
 > conservan decisiones de julio; para el player prevalece la actualización siguiente.
 
 ## Actualización del reproductor — septiembre 2026
@@ -41,8 +41,11 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
   nuevos, evento sin señal y cruce de día UTC→Argentina verificados. Array vacío reconocido
   devuelve vacío; formato desconocido, operación `eval` y firma alterada se rechazan.
   Esto valida extracción, no todas las transmisiones. `RecipeInspectorActivity` solo existe en
-  debug y permite validar candidatos/muestras sin publicar. No se modificaron GitHub ni la rutina
-  semanal con esta entrega; integrar sus secretos y publicación es un paso operativo separado.
+  debug y permite validar candidatos/muestras sin publicar. APK v0.9 publicado en
+  `pelotalibretv-config/releases/tag/v9`, SHA-256 verificado y auto-update activado en `version.json`.
+  Catálogo firmado 2026090502 publicado: firma y hashes de las ocho fuentes verificados desde GitHub.
+  `config.json` v1 se conserva para versiones anteriores. La rutina semanal todavía necesita
+  adaptar su publicación al catálogo firmado; no se cargaron claves privadas en GitHub.
 
 - v0.8 agrega `futbollibrehd.lol` bajo Pelota Libre. `strategy=eventsJson`, `/api/agenda`:
   `events[]` con `title`, `time`, `sport`, `date` y `embeds[]` (`name`, `lang`, `iframe`).

@@ -82,7 +82,7 @@ la página que la originó como Referer. Eso no garantiza que el servidor permit
 
 ```powershell
 node tools/config-tool.mjs bundle --out C:\tmp\pelota-config-dist `
-  --key "$env:USERPROFILE\.pelotalibretv\config-signing.pem" --revision 2026090502
+  --key "$env:USERPROFILE\.pelotalibretv\config-signing.pem" --revision 2026090601
 ```
 
 4. Revisar el resultado. El comando NO hace commit, push ni publica automáticamente.
@@ -114,8 +114,10 @@ La UI recibe cambios por StateFlow, conserva selección por ID y no modifica un 
 - Firma inválida o fallo de red NO dispara fallback remoto sin firma.
 - `useLegacyParser=true` conserva explícitamente el parser Kotlin de una fuente durante migración.
   No hay fallback silencioso si una receta falla: ocultaría errores como agendas vacías.
-- Mantener `config.json`/`version.json` antiguos para los APK ya instalados; publicar v0.9 solo
-  después de validar. No se publicó ni alteró producción con esta implementación.
+- Se conserva `config.json` v1 para APK anteriores. El 06/09/2026 se publicó APK v0.9 (tag `v9`)
+  y se actualizó `version.json` a versionCode 9. Catálogo firmado activo: revisión 2026090502.
+  Firma, ocho hashes remotos y digest del APK publicado verificados. La prueba de reproducción
+  completa en la TV física sigue siendo una verificación del usuario.
 
 ## Diagnóstico y mantenimiento
 
