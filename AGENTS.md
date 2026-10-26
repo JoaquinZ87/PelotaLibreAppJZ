@@ -55,6 +55,9 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
   Redirección observada en el servidor real; evita que la navegación anti-popup del
   main frame bloquee la migración de host. No se afloja esa protección ni se modifica Kotlin.
   Las señales de `playvi.org` no cambian. Validación real en el motor release de la TV aprobada.
+  La app instalada confirmó revisión 2026102604 y ESPN reprodujo video real en pantalla
+  completa (capturas ADB). No se verificó auditivamente el audio ni todas las señales.
+  Fútbol Vivo/ESPN4: `la18hd.su` rechaza conexión; alternativa móvil quedó en negro.
 
 ## Actualización del reproductor — septiembre 2026
 
