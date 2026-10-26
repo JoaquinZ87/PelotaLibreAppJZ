@@ -15,7 +15,10 @@ val keystoreProps = Properties().apply {
 
 // Compilar FUERA de Google Drive: Drive bloquea/sincroniza los archivos de build/ y rompe el
 // merge de recursos y el clean. Redirigimos la salida a una carpeta local rápida.
-layout.buildDirectory.set(file("C:/tmp/pelotalibretv-build"))
+layout.buildDirectory.set(file(providers.gradleProperty("pelotaBuildDir").orElse(
+    if (System.getProperty("os.name").startsWith("Windows")) "C:/tmp/pelotalibretv-build"
+    else "/tmp/pelotalibretv-build"
+).get()))
 
 android {
     namespace = "com.jz.pelotalibretv"
@@ -25,8 +28,8 @@ android {
         applicationId = "com.jz.pelotalibretv"
         minSdk = 23
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.9"
+        versionCode = 10
+        versionName = "0.10"
     }
 
     signingConfigs {
@@ -100,4 +103,6 @@ dependencies {
     implementation(libs.coil.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }

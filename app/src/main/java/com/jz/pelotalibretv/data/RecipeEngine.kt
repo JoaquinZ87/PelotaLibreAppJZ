@@ -15,7 +15,7 @@ import java.net.URLDecoder
 class RecipeMismatch(message: String) : IllegalArgumentException(message)
 
 object RecipeEngine {
-    const val VERSION = 1
+    const val VERSION = 2
     private const val MAX_ITEMS = 2000
     private val pathPattern = Regex("""\$(?:\.[A-Za-z_][A-Za-z0-9_-]*(?:\[\*\])?)*""")
     private val operations = setOf("trim", "query", "base64", "urlDecode", "absolute", "before", "after", "replace", "default")
@@ -23,6 +23,10 @@ object RecipeEngine {
     fun validate(recipe: JSONObject, resolver: Boolean = false) {
         require(recipe.optString("format") in setOf("html", "json")) { "Formato no soportado" }
         val format = recipe.getString("format")
+        if (recipe.has("documentDecoder")) {
+            require(format == "json") { "El decodificador requiere JSON" }
+            DocumentDecoder.validate(recipe.getJSONObject("documentDecoder"))
+        }
         require(recipe.optString("timeFormat", "HH:mm") in setOf("HH:mm", "HH:mm:ss", "h:mma", "h:mm a"))
         fun selection(value: String) {
             require(value.length in 1..500)
@@ -63,13 +67,17 @@ object RecipeEngine {
             require(steps.length() <= 3)
             for (index in 0 until steps.length()) {
                 val step = steps.getJSONObject(index)
-                validate(JSONObject().put("format", step.getString("format")).put("url", step.getJSONObject("url")), true)
+                val resolverStep = JSONObject().put("format", step.getString("format")).put("url", step.getJSONObject("url"))
+                if (step.has("documentDecoder")) resolverStep.put("documentDecoder", step.getJSONObject("documentDecoder"))
+                validate(resolverStep, true)
             }
         }
     }
 
-    private fun document(text: String, format: String, baseUrl: String): Any =
-        if (format == "html") Jsoup.parse(text, baseUrl) else JSONTokener(text).nextValue()
+    private fun document(text: String, recipe: JSONObject, baseUrl: String): Any {
+        val decoded = DocumentDecoder.decode(text, recipe.optJSONObject("documentDecoder"))
+        return if (recipe.getString("format") == "html") Jsoup.parse(decoded, baseUrl) else JSONTokener(decoded).nextValue()
+    }
 
     private fun select(node: Any, selector: String): List<Any> {
         if (node is Element) return node.select(selector).take(MAX_ITEMS + 1)
@@ -131,7 +139,7 @@ object RecipeEngine {
     }
 
     fun extractUrl(text: String, baseUrl: String, recipe: JSONObject): String? =
-        url(field(document(text, recipe.getString("format"), baseUrl), recipe.getJSONObject("url"), baseUrl), baseUrl)
+        url(field(document(text, recipe, baseUrl), recipe.getJSONObject("url"), baseUrl), baseUrl)
 
     fun fetch(source: Source, recipe: JSONObject, defaultPath: String, mirror: String, deadline: Long = System.nanoTime() + 40_000_000_000): SiteHttp.Page {
         val request = recipe.optJSONObject("request") ?: JSONObject()
@@ -149,7 +157,7 @@ object RecipeEngine {
     }
 
     fun parse(text: String, baseUrl: String, source: Source, recipe: JSONObject): List<Event> {
-        val root = document(text, recipe.getString("format"), baseUrl)
+        val root = document(text, recipe, baseUrl)
         val recognized = select(root, recipe.getString("recognize"))
         if (recognized.isEmpty() || (root !is Element && recognized.none { it is JSONArray })) throw RecipeMismatch("Formato de agenda no reconocido")
         val items = select(root, recipe.getString("items"))
@@ -168,12 +176,15 @@ object RecipeEngine {
                     runCatching signal@{
                         val embedUrl = url(field(serverItem, serverFields?.optJSONObject("url"), baseUrl), baseUrl)
                             ?: return@signal null
+                        val referer = field(serverItem, serverFields?.optJSONObject("referer"), baseUrl)
+                        val origin = if (referer.isBlank()) baseUrl else url(referer, baseUrl)
+                            ?: throw RecipeMismatch("Referer inválido")
                         Server(
                             name = field(serverItem, serverFields?.optJSONObject("name"), baseUrl).ifBlank { "Canal" },
                             quality = field(serverItem, serverFields?.optJSONObject("quality"), baseUrl),
                             embedUrl = embedUrl,
                             needsResolve = serversSpec?.optBoolean("needsResolve") == true,
-                            referer = baseUrl
+                            referer = origin
                         )
                     }.getOrNull()
                 }.distinctBy { it.embedUrl }

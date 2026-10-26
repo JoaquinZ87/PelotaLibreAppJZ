@@ -32,8 +32,8 @@
     }
   ],
   "schemaVersion": 2,
-  "minEngineVersion": 1,
-  "revision": 2026102604,
+  "minEngineVersion": 2,
+  "revision": 2026102605,
   "recipes": {
     "menuR": {
       "format": "html",
@@ -402,9 +402,89 @@
           }
         }
       }
+    },
+    "latinEncrypted": {
+      "format": "json",
+      "documentDecoder": {
+        "type": "substitutionAesGcm",
+        "prefix": "k1",
+        "alphabet": "MiljRIn9PX1o63wGBYTtFsKmEkSur-pC_U02cvzAdy5e8ZqLDgJ4OhVN7QbHxfWa",
+        "keyBase64": "vqW3n/yB1R+GwSPc4kJs2dCkV7kRmXaNy3lQ/3XkHJI="
+      },
+      "recognize": "$.matches",
+      "items": "$.matches[*]",
+      "allowEmpty": true,
+      "timeFormat": "HH:mm:ss",
+      "fields": {
+        "title": {
+          "select": "$.title"
+        },
+        "date": {
+          "select": "$.starts_at",
+          "transforms": [
+            {
+              "op": "before",
+              "value": "T"
+            }
+          ]
+        },
+        "time": {
+          "select": "$.starts_at",
+          "transforms": [
+            {
+              "op": "after",
+              "value": "T"
+            },
+            {
+              "op": "before",
+              "value": "Z"
+            }
+          ]
+        },
+        "category": {
+          "select": "$.league"
+        }
+      },
+      "servers": {
+        "items": "$.streams[*]",
+        "fields": {
+          "name": {
+            "select": "$.name"
+          },
+          "quality": {
+            "select": "$.language"
+          },
+          "url": {
+            "select": "$.embed_url"
+          },
+          "referer": {
+            "literal": "https://sportiskos.space/"
+          }
+        }
+      },
+      "request": {
+        "path": "https://cdn.strm-api.org/api/v1/latin/matches"
+      }
     }
   },
   "sources": [
+    {
+      "id": "futbolvivotv",
+      "name": "Fútbol Vivo TV",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://futbolvivo.tv"
+      ],
+      "homePath": "/",
+      "agendaPath": "/",
+      "sourceUtcOffsetMinutes": 0,
+      "targetUtcOffsetMinutes": -180,
+      "sourceTimeZone": "UTC",
+      "channelsEnabled": false,
+      "strategy": "recipe",
+      "agendaRecipe": "latinEncrypted",
+      "resolverRecipe": "iframe"
+    },
     {
       "id": "futbolvivo",
       "name": "Fútbol Vivo",

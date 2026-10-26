@@ -32,9 +32,10 @@
     }
   ],
   "schemaVersion": 2,
-  "minEngineVersion": 1,
+  "minEngineVersion": 2,
   "revision": 1,
   "sourceFiles": [
+    "sources/futbolvivotv.json",
     "sources/futbolvivo.json",
     "sources/pelotalibre.json",
     "sources/pelotalibremas.json",
@@ -56,6 +57,7 @@
     "recipes/iframe.json",
     "recipes/cards.json",
     "recipes/strapiMx.json",
-    "recipes/menu2Live5.json"
+    "recipes/menu2Live5.json",
+    "recipes/latinEncrypted.json"
   ]
 }

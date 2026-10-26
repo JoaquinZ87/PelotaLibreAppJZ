@@ -14,6 +14,16 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 
 function validateRecipe(recipe, resolver = false) {
     assert(['html', 'json'].includes(recipe.format), 'Formato desconocido');
+    if (recipe.documentDecoder !== undefined) {
+        const decoder = recipe.documentDecoder;
+        assert(recipe.format === 'json' && decoder?.type === 'substitutionAesGcm', 'Decodificador desconocido');
+        assert(typeof decoder.prefix === 'string' && decoder.prefix.length >= 1 && decoder.prefix.length <= 16, 'Prefijo inválido');
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        assert(typeof decoder.alphabet === 'string' && decoder.alphabet.length === 64 &&
+            new Set(decoder.alphabet).size === 64 && [...decoder.alphabet].every(c => alphabet.includes(c)), 'Alfabeto inválido');
+        assert(typeof decoder.keyBase64 === 'string' && /^[A-Za-z0-9+/]+={0,2}$/.test(decoder.keyBase64) &&
+            decoder.keyBase64.length <= 64 && [16, 24, 32].includes(Buffer.from(decoder.keyBase64, 'base64').length), 'Clave de datos inválida');
+    }
     assert(['HH:mm', 'HH:mm:ss', 'h:mma', 'h:mm a'].includes(recipe.timeFormat || 'HH:mm'), 'Formato de hora desconocido');
     const selection = value => {
         assert(typeof value === 'string' && value.length > 0 && value.length <= 500, 'Selector inválido');
@@ -45,12 +55,15 @@ function validateRecipe(recipe, resolver = false) {
     }
     const follow = recipe.request?.follow || [];
     assert(Array.isArray(follow) && follow.length <= 3, 'Demasiados pasos');
-    follow.forEach(step => validateRecipe({ format: step.format, url: step.url }, true));
+    follow.forEach(step => validateRecipe({ format: step.format, url: step.url, documentDecoder: step.documentDecoder }, true));
 }
+
+const needsEngine2 = recipe => !!(recipe.documentDecoder || recipe.servers?.fields?.referer ||
+    recipe.request?.follow?.some(step => step.documentDecoder));
 
 async function load() {
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
-    assert(catalog.schemaVersion === 2 && catalog.minEngineVersion === 1, 'Esquema/motor incompatible');
+    assert(catalog.schemaVersion === 2 && [1, 2].includes(catalog.minEngineVersion), 'Esquema/motor incompatible');
     const base = dirname(catalogPath);
     const local = path => {
         const absolute = resolve(base, path);
@@ -64,6 +77,8 @@ async function load() {
         assert(!recipes[id], 'Receta duplicada');
         recipes[id] = JSON.parse(await readFile(local(path), 'utf8'));
         validateRecipe(recipes[id], !!recipes[id].url);
+        assert(catalog.minEngineVersion >= 2 || !needsEngine2(recipes[id]),
+            'La decodificación y el Referer por señal requieren motor 2');
     }
     const sources = [];
     const ids = new Set();
@@ -80,6 +95,8 @@ async function load() {
             if (!source[key]) continue;
             const recipe = typeof source[key] === 'string' ? recipes[source[key]] : source[key];
             validateRecipe(recipe, key === 'resolverRecipe');
+            assert(catalog.minEngineVersion >= 2 || !needsEngine2(recipe),
+                'La receta requiere motor 2');
         }
         assert(source.agendaRecipe, 'Falta receta de agenda');
         sources.push(source);
@@ -121,9 +138,10 @@ if (command === 'validate') {
     const payload = Buffer.from(JSON.stringify({ ...settings, revision, sourceFiles }));
     const signature = sign('RSA-SHA256', payload, key);
     assert(verify('RSA-SHA256', payload, createPublicKey(key), signature), 'Verificación de firma falló');
-    await writeFile(join(out, 'manifest.json'), JSON.stringify({ payload: payload.toString('base64'), signature: signature.toString('base64') }, null, 2) + '\n');
+    const manifestName = config.minEngineVersion >= 2 ? `manifest-v${config.minEngineVersion}.json` : 'manifest.json';
+    await writeFile(join(out, manifestName), JSON.stringify({ payload: payload.toString('base64'), signature: signature.toString('base64') }, null, 2) + '\n');
     await writeFile(join(out, 'config-v2.json'), JSON.stringify({ ...config, revision }, null, 2) + '\n');
-    console.log(`Bundle firmado ${revision}: ${out}. Subir bundles primero y manifest.json al final; no se publicó nada automáticamente.`);
+    console.log(`Bundle firmado ${revision}: ${out}. Subir bundles primero y ${manifestName} al final; no se publicó nada automáticamente.`);
 } else {
     throw new Error(`Comando desconocido: ${command}`);
 }

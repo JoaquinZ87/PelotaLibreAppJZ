@@ -1,4 +1,4 @@
-# Recetas remotas — motor 1 / APK 0.9
+# Recetas remotas — motor 2 / APK 0.10
 
 ## Qué cambia
 
@@ -52,7 +52,10 @@ Ejemplo de URL codificada:
 ]}
 ```
 
-`servers.items` se evalúa dentro de cada evento; sus `fields` son `name`, `quality`, `url`.
+`servers.items` se evalúa dentro de cada evento; sus `fields` son `name`, `quality`, `url`
+y, desde motor 2, `referer` opcional. Sin este último se conserva la URL del documento;
+si se declara, debe resolver a HTTP(S) sin credenciales. Permite conservar el origen del
+reproductor cuando la agenda se descarga desde una API separada.
 `needsResolve=true` indica página de detalle. `groupByTitle=true` agrupa por título, fecha y hora,
 no mezcla partidos con el mismo título en distintos horarios.
 
@@ -60,6 +63,22 @@ no mezcla partidos con el mismo título en distintos horarios.
 `format` y `url` (especificación de campo). Sirve para portada → iframe de agenda → datos.
 Cada paso descarga un documento público; no ejecuta JavaScript ni resuelve challenges.
 El resolvedor usa la misma secuencia de pasos y finalmente extrae `url`.
+
+### JSON codificado (motor 2)
+
+`documentDecoder` admite una única operación declarativa: `type: "substitutionAesGcm"`.
+Se usa para los datos públicos de la agenda Latin de Fútbol Vivo TV. `prefix` identifica el
+formato; después se invierte el texto, se sustituye `alphabet` (permutación de los 64 caracteres
+Base64 URL-safe) por el alfabeto estándar y se decodifica Base64. Los primeros 12 bytes son
+el IV; el resto es ciphertext con tag GCM de 128 bits. `keyBase64` admite AES de 128/192/256 bits.
+Son parámetros públicos publicados por el frontend, distintos de la clave privada de firma
+de configuración. No se ejecuta JavaScript remoto ni se intercepta/cifra el video.
+
+La autenticación GCM debe pasar antes de interpretar JSON. Prefijo incorrecto, alfabeto inválido,
+datos truncados, tag incorrecto o clave cambiada producen error de fuente; no agenda vacía ni
+fallback a texto plano. Límite de documento: 4 millones de caracteres. También puede declararse
+en un paso `request.follow` JSON. Estas recetas y el Referer por señal requieren
+`minEngineVersion: 2`; el validador de publicación rechaza declararlas para motor 1.
 
 Canales reutilizan el motor: `fields.title` es nombre, `fields.category` es logo, y el primer
 servidor es la página del canal. Ver receta `cards`. La pantalla actual sigue centrada en eventos;
@@ -87,7 +106,9 @@ node tools/config-tool.mjs bundle --out C:\tmp\pelota-config-dist `
 
 4. Revisar el resultado. El comando NO hace commit, push ni publica automáticamente.
 5. Subir `bundles/<revision>/*.json` al repo de configuración. No modificar revisiones existentes.
-6. Subir `manifest.json` AL FINAL. Incluye payload firmado RSA-SHA256 y hashes SHA-256 por archivo.
+6. Subir el manifiesto generado AL FINAL: `manifest-v2.json` para motor 2; `manifest.json`
+   se reserva para motor 1. Incluye payload firmado RSA-SHA256 y hashes SHA-256 por archivo.
+   No reemplazar el canal de APK antiguos por recetas incompatibles.
 7. Presionar **Actualizar fuentes** en la app y verificar la revisión y la agenda.
 
 La clave privada está fuera del proyecto, en `%USERPROFILE%\.pelotalibretv\config-signing.pem`.
@@ -108,7 +129,10 @@ La UI recibe cambios por StateFlow, conserva selección por ID y no modifica un 
 
 ## Migración / compatibilidad
 
-- Hasta que exista `manifest.json` (HTTP 404), se permite el `config.json` antiguo por HTTPS.
+- Motor 2 consulta primero `manifest-v2.json`. Solo HTTP 404 permite consultar `manifest.json`.
+  Errores HTTP, red, firma o formato no disparan ese fallback. Motor 1 sigue consultando su canal.
+- Si ambos manifiestos faltan (HTTP 404), se permite el `config.json` antiguo por HTTPS,
+  únicamente antes de aceptar el primer catálogo firmado.
 - A los formatos heredados se les asignan recetas incorporadas por estrategia.
 - Después de aceptar un catálogo firmado, la app no vuelve a aceptar el canal antiguo.
 - Firma inválida o fallo de red NO dispara fallback remoto sin firma.
@@ -118,8 +142,9 @@ La UI recibe cambios por StateFlow, conserva selección por ID y no modifica un 
   y se actualizó `version.json` a versionCode 9. Catálogo firmado inicial: revisión 2026090502.
   El 26/10/2026 se publicó revisión **2026102604** con diez definiciones y ocho fuentes activas; ver
   `docs/SOURCES-2026-10-26.md` para cambios y validación en TV.
-  Firma, ocho hashes remotos y digest del APK publicado verificados. La prueba de reproducción
-  completa en la TV física sigue siendo una verificación del usuario.
+  Motor 2 / APK v0.10 agrega el canal `manifest-v2.json`, revisión **2026102605**, con once
+  definiciones y nueve fuentes activas. Firma y hashes remotos comprobados desde Android;
+  ESPN7 de Fútbol Vivo TV probado con video real en la TV física. No valida todas las señales.
 
 ## Diagnóstico y mantenimiento
 

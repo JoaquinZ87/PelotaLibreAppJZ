@@ -24,9 +24,8 @@ object SignedConfig {
         return root
     }
 
-    fun fetch(publicKey: String): String? {
-        val deadline = System.nanoTime() + 60_000_000_000
-        val envelopeText = TrustedHttp.client.newCall(Request.Builder().url(base + "manifest.json").build()).execute().use { response ->
+    private fun downloadManifest(path: String): String? =
+        TrustedHttp.client.newCall(Request.Builder().url(base + path).build()).execute().use { response ->
             if (response.code == 404) return null
             check(response.isSuccessful) { "Catálogo HTTP ${response.code}" }
             val body = response.body ?: error("Catálogo vacío")
@@ -36,6 +35,14 @@ object SignedConfig {
             require(buffer.size <= 262144)
             buffer.readUtf8()
         }
+
+    /** Cada motor tiene su catálogo. Solo un 404 permite consultar el canal anterior. */
+    internal fun fetchEnvelope(download: (String) -> String? = ::downloadManifest): String? =
+        download("manifest-v${RecipeEngine.VERSION}.json") ?: download("manifest.json")
+
+    fun fetch(publicKey: String): String? {
+        val deadline = System.nanoTime() + 60_000_000_000
+        val envelopeText = fetchEnvelope() ?: return null
         val root = verify(envelopeText, publicKey)
         val files = root.getJSONArray("sourceFiles")
         require(files.length() in 1..100)

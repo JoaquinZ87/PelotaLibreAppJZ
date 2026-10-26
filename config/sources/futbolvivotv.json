@@ -1,0 +1,17 @@
+{
+  "id": "futbolvivotv",
+  "name": "Fútbol Vivo TV",
+  "platform": "Pelota Libre",
+  "mirrors": [
+    "https://futbolvivo.tv"
+  ],
+  "homePath": "/",
+  "agendaPath": "/",
+  "sourceUtcOffsetMinutes": 0,
+  "targetUtcOffsetMinutes": -180,
+  "sourceTimeZone": "UTC",
+  "channelsEnabled": false,
+  "strategy": "recipe",
+  "agendaRecipe": "latinEncrypted",
+  "resolverRecipe": "iframe"
+}

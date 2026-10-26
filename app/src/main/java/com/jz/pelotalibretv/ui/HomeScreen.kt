@@ -316,13 +316,13 @@ private fun VariantSelector(variants: List<Source>, selected: Source, onSelect: 
                 .height(1.dp)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
         )
-        Row(
+        LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 48.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            variants.forEach { v ->
+            items(variants, key = { it.id }) { v ->
                 Chip(domainLabel(v), selected = v.id == selected.id) { onSelect(v) }
             }
         }

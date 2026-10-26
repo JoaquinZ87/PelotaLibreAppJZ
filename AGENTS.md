@@ -8,8 +8,37 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
 > Este archivo es la fuente de verdad del proyecto. **Mantenerlo vivo**: actualizar el estado de los
 > módulos y las decisiones cada vez que cambie algo relevante.
 >
-> Última revisión: **26/oct/2026** (v0.9 publicada, `versionCode 9`). Las secciones históricas
+> Última revisión: **26/oct/2026** (v0.10 publicada, `versionCode 10`). Las secciones históricas
 > conservan decisiones de julio; para el player prevalece la actualización siguiente.
+
+## Fútbol Vivo TV y motor 2 — octubre 2026
+
+- **v0.10:** `RecipeEngine.VERSION=2`. Nueva fuente `futbolvivotv`, distinta de `.site`:
+  agenda Latin pública de `cdn.strm-api.org`, receta `latinEncrypted`, fechas ISO UTC → Argentina.
+  Endpoint, alfabeto y clave pública de datos viven en JSON. `DocumentDecoder` solo interpreta
+  `substitutionAesGcm`: prefijo, reversa/sustitución Base64 URL-safe, IV de 12 bytes y tag GCM de
+  128 bits. Rechaza autenticación inválida; no ejecuta JS/eval/DEX ni modifica la reproducción.
+  `servers.fields.referer` opcional conserva el origen del wrapper cuando la API es otro host.
+- Catálogo **2026102605**, once definiciones (nueve activas) y once recetas, `minEngineVersion=2`.
+  Se publica en **`manifest-v2.json`**. La v0.9 conserva **`manifest.json` / 2026102604**;
+  no publicar recetas del motor 2 en ese canal. Motor 2 solo cae al manifiesto antiguo ante 404,
+  nunca por errores HTTP, de red, formato o firma. `config-tool` elige el nombre correspondiente.
+  Asset offline sincronizado con el bundle. v1 no incorpora esta fuente incompatible.
+- Selector de variantes convertido a `LazyRow` con claves por ID para soportar más dominios
+  sin ocultar la agenda. Compilación fuera de Drive: Windows `C:/tmp/pelotalibretv-build`, Linux
+  `/tmp/pelotalibretv-build`; propiedad `pelotaBuildDir` permite otra carpeta.
+- Validación: seis tests JVM (fixture cifrado independiente, integridad, datos inválidos,
+  fecha/horario, señal sin servidor, compatibilidad y canal de manifiestos), build release y lint
+  vital aprobados. En TV Android 11, clases del APK release mediante `app_process`: firma,
+  descarga remota, nueve fuentes activas y extracción de siete fuentes sin errores.
+  Fútbol Vivo TV: **25 eventos/140 señales**; ejemplo del usuario a las **13:00 ART**.
+- ESPN7 del enlace del usuario reprodujo **1280×720**, `readyState=4`, tiempo avanzando más
+  de dos minutos y `muted=false`, con capturas ADB que muestran video. Audio no escuchado;
+  no implica que todas las señales funcionen. Probado con paquete debug temporal separado;
+  la actualización release usa la misma firma que v0.9 y conserva los datos del TV.
+  También se verificó video real desde la grilla de la release instalada, navegando con D-pad.
+  APK publicado en `pelotalibretv-config/releases/tag/v10`, descarga SHA-256 verificada.
+  Detalles y publicación en `docs/SOURCES-2026-10-26.md` y `docs/REMOTE-RECIPES.md`.
 
 ## Actualización de fuentes — octubre 2026
 
@@ -48,7 +77,7 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
   chip y ocultando la agenda. Revisión 2026102603 desactiva `pelotalibremas` (agenda 404)
   y `futbollibrehdlol` (redirige a Futbolvivo; además su huso histórico ya no corresponde).
   Se conservan sus definiciones para rollback; quedan las cuatro variantes vigentes.
-  Para ampliar más variantes en el futuro, cambiar el selector por una fila desplazable.
+  La v0.10 posterior reemplaza ese selector por una fila desplazable.
 
 - Revisión 2026102604: `menu2Live5` deriva de `menu2` y cambia únicamente
   `https://streamx305.sbs/` por `https://streamx723.sbs/` en las URLs decodificadas.
@@ -228,7 +257,7 @@ Capas y archivos reales:
 - **Reproducción nativa (M5, NO agregada aún):** Media3 ExoPlayer (`media3-exoplayer`,
   `media3-exoplayer-hls`, `media3-ui`). HLS sin DRM, sin config extra.
 - **Build:** compileSdk **35**, targetSdk **35**, **minSdk 23**. `applicationId` = `namespace` =
-  **`com.jz.pelotalibretv`**. Versión actual: `versionCode 2` / `versionName "0.2"`.
+  **`com.jz.pelotalibretv`**. Versión actual: `versionCode 10` / `versionName "0.10"`.
   **AGP 9.3.0 + Kotlin 2.2.10** (Android Studio Q2-2026 auto-actualiza AGP/Gradle al abrir el
   proyecto; dejar lo que ponga y reflejarlo acá).
 - **Java:** `sourceCompatibility`/`targetCompatibility` = **17** y `jvmTarget = 17` (DSL nueva

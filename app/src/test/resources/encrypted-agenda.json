@@ -1,0 +1,9 @@
+{
+  "decoder": {
+    "type": "substitutionAesGcm",
+    "prefix": "k1",
+    "alphabet": "_-9876543210zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA",
+    "keyBase64": "KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKio="
+  },
+  "payload": "k12xkTDLA69QraWisjE3qjR6ojnCaO6xbj-ofaIgVVvfTosPF4A4u9co3FE-yEuyiakxQY34pnPp4M9FTyQYzAzOkAMJZZDNRYbuXob9z-L1rNXBl8zUuoxLuxYnFVBUhB5OV29KInY4p7filQNIIrhsgL1kQRGgGR5W_6DKUNEuSrcaeTx2tVlFtqJLP771axh-8aH_3mc0GFdStBZcr3hoVYuiFiAtznnsX_vGGPe7_1UIDK62kQInCAsqa578aPNvfgAjt9UWKi3ytpbEzpNlQSIPMB8QIGkhji0xx6XVl2Pc4aFgWYU40oInyPopIXAMYCfAKI4-M4b569VEbr8EiDEU7l1tqsI49OtJyu4jP-4jP-4jP-4jP-"
+}
