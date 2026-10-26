@@ -1,6 +1,8 @@
 {
   "disabledSourceIds": [
-    "pelotalibreuno"
+    "pelotalibreuno",
+    "pelotalibremas",
+    "futbollibrehdlol"
   ],
   "playerBlockedHosts": [
     "cubbiesexcheat.com",
@@ -33,9 +35,11 @@
   "minEngineVersion": 1,
   "revision": 1,
   "sourceFiles": [
+    "sources/futbolvivo.json",
     "sources/pelotalibre.json",
     "sources/pelotalibremas.json",
     "sources/pelotaalibrela.json",
+    "sources/pelotalibremx.json",
     "sources/futbollibrehdlol.json",
     "sources/alangulo1.json",
     "sources/alangulo2.json",
@@ -50,6 +54,8 @@
     "recipes/strapi.json",
     "recipes/rows.json",
     "recipes/iframe.json",
-    "recipes/cards.json"
+    "recipes/cards.json",
+    "recipes/strapiMx.json",
+    "recipes/menu2Live5.json"
   ]
 }

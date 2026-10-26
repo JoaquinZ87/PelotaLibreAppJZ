@@ -1,0 +1,17 @@
+{
+  "id": "pelotalibremx",
+  "name": "Pelota Libre (mx)",
+  "platform": "Pelota Libre",
+  "mirrors": [
+    "https://pelotalibre.mx"
+  ],
+  "homePath": "/",
+  "agendaPath": "/agenda.json",
+  "sourceUtcOffsetMinutes": -300,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "strapi",
+  "agendaRecipe": "strapiMx",
+  "resolverRecipe": "iframe",
+  "sourceTimeZone": "America/Lima"
+}

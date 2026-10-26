@@ -1,0 +1,17 @@
+{
+  "id": "futbolvivo",
+  "name": "Fútbol Vivo",
+  "platform": "Pelota Libre",
+  "mirrors": [
+    "https://futbolvivo.site"
+  ],
+  "homePath": "/",
+  "agendaPath": "/api/agenda",
+  "sourceUtcOffsetMinutes": -300,
+  "targetUtcOffsetMinutes": -180,
+  "channelsEnabled": false,
+  "strategy": "eventsJson",
+  "agendaRecipe": "eventsJson",
+  "resolverRecipe": "iframe",
+  "sourceTimeZone": "America/Lima"
+}

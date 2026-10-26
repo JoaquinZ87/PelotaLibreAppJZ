@@ -1,6 +1,8 @@
 {
   "disabledSourceIds": [
-    "pelotalibreuno"
+    "pelotalibreuno",
+    "pelotalibremas",
+    "futbollibrehdlol"
   ],
   "playerBlockedHosts": [
     "cubbiesexcheat.com",
@@ -31,144 +33,7 @@
   ],
   "schemaVersion": 2,
   "minEngineVersion": 1,
-  "revision": 1,
-  "sources": [
-    {
-      "id": "pelotalibre",
-      "name": "Pelota Libre",
-      "platform": "Pelota Libre",
-      "mirrors": [
-        "https://pelotalibrehd.su"
-      ],
-      "homePath": "/es/",
-      "agendaPath": "/es/agenda/",
-      "sourceUtcOffsetMinutes": -300,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "menu2",
-      "agendaRecipe": "menu2",
-      "resolverRecipe": "iframe"
-    },
-    {
-      "id": "pelotalibremas",
-      "name": "Pelota Libre +",
-      "platform": "Pelota Libre",
-      "mirrors": [
-        "https://pelotalibre-hd.su"
-      ],
-      "homePath": "/",
-      "agendaPath": "/agenda2/",
-      "sourceUtcOffsetMinutes": -300,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "menuR",
-      "agendaRecipe": "menuR",
-      "resolverRecipe": "iframe"
-    },
-    {
-      "id": "pelotaalibrela",
-      "name": "Pelota Libre (la)",
-      "platform": "Pelota Libre",
-      "mirrors": [
-        "https://pelotaalibre.la"
-      ],
-      "homePath": "/",
-      "agendaPath": "/agenda.php",
-      "sourceUtcOffsetMinutes": 60,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "menuR",
-      "agendaRecipe": "menuR",
-      "resolverRecipe": "iframe"
-    },
-    {
-      "id": "futbollibrehdlol",
-      "name": "Fútbol Libre HD",
-      "platform": "Pelota Libre",
-      "mirrors": [
-        "https://futbollibrehd.lol"
-      ],
-      "homePath": "/",
-      "agendaPath": "/api/agenda",
-      "sourceUtcOffsetMinutes": 0,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "eventsJson",
-      "agendaRecipe": "eventsJson",
-      "resolverRecipe": "iframe",
-      "sourceTimeZone": "UTC"
-    },
-    {
-      "id": "alangulo1",
-      "name": "Al Ángulo TV",
-      "platform": "Al Ángulo TV",
-      "mirrors": [
-        "https://alangulotv.quest"
-      ],
-      "homePath": "/",
-      "agendaPath": "/wp-admin/admin-ajax.php?action=futbol_agenda_data",
-      "sourceUtcOffsetMinutes": -300,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "wpjson",
-      "agendaRecipe": "wpjson",
-      "resolverRecipe": "iframe"
-    },
-    {
-      "id": "alangulo2",
-      "name": "Al Ángulo TV (2)",
-      "platform": "Al Ángulo TV",
-      "mirrors": [
-        "https://alangulotv.cx"
-      ],
-      "homePath": "/",
-      "agendaPath": "/agenda.php",
-      "sourceUtcOffsetMinutes": 60,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "menuR",
-      "agendaRecipe": "menuR",
-      "resolverRecipe": "iframe"
-    },
-    {
-      "id": "rustico",
-      "name": "Rústico TV",
-      "platform": "Rústico TV",
-      "mirrors": [
-        "https://rusticotv.la",
-        "https://mirusticotv.su",
-        "https://rusticotv.su"
-      ],
-      "homePath": "/",
-      "agendaPath": "/agenda.php",
-      "sourceUtcOffsetMinutes": 60,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "menuR",
-      "agendaRecipe": "menuR",
-      "resolverRecipe": "iframe"
-    },
-    {
-      "id": "rojadirecta",
-      "name": "RojaDirecta",
-      "platform": "RojaDirecta",
-      "mirrors": [
-        "https://rojadirecta.st"
-      ],
-      "homePath": "/",
-      "agendaPath": "/programacion/",
-      "sourceUtcOffsetMinutes": 120,
-      "targetUtcOffsetMinutes": -180,
-      "channelsEnabled": false,
-      "strategy": "rows",
-      "eventRowSelector": "div.match",
-      "eventTimeSelector": "span.time",
-      "eventNameSelector": "span.name",
-      "eventLinkSelector": "div.chans a[href]",
-      "agendaRecipe": "rows",
-      "resolverRecipe": "iframe"
-    }
-  ],
+  "revision": 2026102604,
   "recipes": {
     "menuR": {
       "format": "html",
@@ -298,6 +163,7 @@
     },
     "wpjson": {
       "format": "json",
+      "timeFormat": "HH:mm:ss",
       "recognize": "$.data",
       "items": "$.data[*]",
       "allowEmpty": true,
@@ -322,8 +188,7 @@
             "select": "$.stream_url"
           }
         }
-      },
-      "timeFormat": "HH:mm:ss"
+      }
     },
     "strapi": {
       "format": "json",
@@ -437,6 +302,280 @@
           }
         }
       }
+    },
+    "strapiMx": {
+      "format": "json",
+      "recognize": "$.data",
+      "items": "$.data[*].attributes",
+      "allowEmpty": true,
+      "timeFormat": "HH:mm:ss",
+      "fields": {
+        "title": {
+          "select": "$.diary_description"
+        },
+        "time": {
+          "select": "$.diary_hour"
+        },
+        "date": {
+          "select": "$.date_diary"
+        },
+        "category": {
+          "select": "$.deportes"
+        }
+      },
+      "servers": {
+        "items": "$.embeds.data[*].attributes",
+        "fields": {
+          "name": {
+            "select": "$.embed_name"
+          },
+          "quality": {
+            "select": "$.idioma"
+          },
+          "url": {
+            "select": "$.embed_iframe",
+            "transforms": [
+              {
+                "op": "query",
+                "value": "r"
+              },
+              {
+                "op": "base64"
+              },
+              {
+                "op": "absolute"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "path": "https://agenda18.com/agenda.json"
+      }
+    },
+    "menu2Live5": {
+      "format": "html",
+      "recognize": "ul#menu",
+      "items": "ul#menu > li",
+      "allowEmpty": true,
+      "timeFormat": "HH:mm:ss",
+      "fields": {
+        "title": {
+          "select": ".info span"
+        },
+        "time": {
+          "select": ".info time",
+          "read": "attr",
+          "attribute": "datetime"
+        },
+        "category": {
+          "read": "attr",
+          "attribute": "data-category"
+        }
+      },
+      "servers": {
+        "items": "a[href*='?r=']",
+        "fields": {
+          "name": {
+            "select": "span"
+          },
+          "url": {
+            "read": "attr",
+            "attribute": "href",
+            "transforms": [
+              {
+                "op": "query",
+                "value": "r"
+              },
+              {
+                "op": "base64"
+              },
+              {
+                "op": "absolute"
+              },
+              {
+                "op": "replace",
+                "value": "https://streamx305.sbs/",
+                "with": "https://streamx723.sbs/"
+              }
+            ]
+          }
+        }
+      }
     }
-  }
+  },
+  "sources": [
+    {
+      "id": "futbolvivo",
+      "name": "Fútbol Vivo",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://futbolvivo.site"
+      ],
+      "homePath": "/",
+      "agendaPath": "/api/agenda",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "eventsJson",
+      "agendaRecipe": "eventsJson",
+      "resolverRecipe": "iframe",
+      "sourceTimeZone": "America/Lima"
+    },
+    {
+      "id": "pelotalibre",
+      "name": "Pelota Libre",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotalibrehd.su"
+      ],
+      "homePath": "/live5/",
+      "agendaPath": "/live5/",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menu2",
+      "agendaRecipe": "menu2Live5",
+      "resolverRecipe": "iframe",
+      "sourceTimeZone": "America/Lima"
+    },
+    {
+      "id": "pelotalibremas",
+      "name": "Pelota Libre +",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotalibre-hd.su"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda2/",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "pelotaalibrela",
+      "name": "Pelota Libre (la)",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotalibre.la"
+      ],
+      "homePath": "/main.php",
+      "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "pelotalibremx",
+      "name": "Pelota Libre (mx)",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://pelotalibre.mx"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda.json",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "strapi",
+      "agendaRecipe": "strapiMx",
+      "resolverRecipe": "iframe",
+      "sourceTimeZone": "America/Lima"
+    },
+    {
+      "id": "futbollibrehdlol",
+      "name": "Fútbol Libre HD",
+      "platform": "Pelota Libre",
+      "mirrors": [
+        "https://futbollibrehd.lol"
+      ],
+      "homePath": "/",
+      "agendaPath": "/api/agenda",
+      "sourceUtcOffsetMinutes": 0,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "eventsJson",
+      "agendaRecipe": "eventsJson",
+      "resolverRecipe": "iframe",
+      "sourceTimeZone": "UTC"
+    },
+    {
+      "id": "alangulo1",
+      "name": "Al Ángulo TV",
+      "platform": "Al Ángulo TV",
+      "mirrors": [
+        "https://alangulotv.quest"
+      ],
+      "homePath": "/",
+      "agendaPath": "/wp-admin/admin-ajax.php?action=futbol_agenda_data",
+      "sourceUtcOffsetMinutes": -300,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "wpjson",
+      "agendaRecipe": "wpjson",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "alangulo2",
+      "name": "Al Ángulo TV (2)",
+      "platform": "Al Ángulo TV",
+      "mirrors": [
+        "https://alangulotv.sx",
+        "https://alangulotv.cx"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "rustico",
+      "name": "Rústico TV",
+      "platform": "Rústico TV",
+      "mirrors": [
+        "https://rusticotvplus.org",
+        "https://rusticotv.la",
+        "https://mirusticotv.su",
+        "https://rusticotv.su"
+      ],
+      "homePath": "/",
+      "agendaPath": "/agenda.php",
+      "sourceUtcOffsetMinutes": 60,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "menuR",
+      "agendaRecipe": "menuR",
+      "resolverRecipe": "iframe"
+    },
+    {
+      "id": "rojadirecta",
+      "name": "RojaDirecta",
+      "platform": "RojaDirecta",
+      "mirrors": [
+        "https://rojadirecta.st"
+      ],
+      "homePath": "/",
+      "agendaPath": "/programacion/",
+      "sourceUtcOffsetMinutes": 120,
+      "targetUtcOffsetMinutes": -180,
+      "channelsEnabled": false,
+      "strategy": "rows",
+      "eventRowSelector": "div.match",
+      "eventTimeSelector": "span.time",
+      "eventNameSelector": "span.name",
+      "eventLinkSelector": "div.chans a[href]",
+      "agendaRecipe": "rows",
+      "resolverRecipe": "iframe"
+    }
+  ]
 }

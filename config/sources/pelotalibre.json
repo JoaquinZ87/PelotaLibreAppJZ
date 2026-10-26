@@ -5,12 +5,13 @@
   "mirrors": [
     "https://pelotalibrehd.su"
   ],
-  "homePath": "/es/",
-  "agendaPath": "/es/agenda/",
+  "homePath": "/live5/",
+  "agendaPath": "/live5/",
   "sourceUtcOffsetMinutes": -300,
   "targetUtcOffsetMinutes": -180,
   "channelsEnabled": false,
   "strategy": "menu2",
-  "agendaRecipe": "menu2",
-  "resolverRecipe": "iframe"
+  "agendaRecipe": "menu2Live5",
+  "resolverRecipe": "iframe",
+  "sourceTimeZone": "America/Lima"
 }

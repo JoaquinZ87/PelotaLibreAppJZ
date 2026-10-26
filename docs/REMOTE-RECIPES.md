@@ -115,7 +115,9 @@ La UI recibe cambios por StateFlow, conserva selección por ID y no modifica un 
 - `useLegacyParser=true` conserva explícitamente el parser Kotlin de una fuente durante migración.
   No hay fallback silencioso si una receta falla: ocultaría errores como agendas vacías.
 - Se conserva `config.json` v1 para APK anteriores. El 06/09/2026 se publicó APK v0.9 (tag `v9`)
-  y se actualizó `version.json` a versionCode 9. Catálogo firmado activo: revisión 2026090502.
+  y se actualizó `version.json` a versionCode 9. Catálogo firmado inicial: revisión 2026090502.
+  El 26/10/2026 se publicó revisión **2026102604** con diez definiciones y ocho fuentes activas; ver
+  `docs/SOURCES-2026-10-26.md` para cambios y validación en TV.
   Firma, ocho hashes remotos y digest del APK publicado verificados. La prueba de reproducción
   completa en la TV física sigue siendo una verificación del usuario.
 

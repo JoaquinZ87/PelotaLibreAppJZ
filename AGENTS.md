@@ -8,8 +8,53 @@ detecta el dispositivo y se adapta orientación y forma de arrancar el player).
 > Este archivo es la fuente de verdad del proyecto. **Mantenerlo vivo**: actualizar el estado de los
 > módulos y las decisiones cada vez que cambie algo relevante.
 >
-> Última revisión: **06/sep/2026** (v0.9 publicada, `versionCode 9`). Las secciones históricas
+> Última revisión: **26/oct/2026** (v0.9 publicada, `versionCode 9`). Las secciones históricas
 > conservan decisiones de julio; para el player prevalece la actualización siguiente.
+
+## Actualización de fuentes — octubre 2026
+
+- Catálogo firmado **2026102604 publicado** el 26/oct/2026. Catálogo: diez definiciones de fuente (ocho activas) y
+  diez recetas. Asset `config-v2.json` sincronizado con el bundle de `config-dist/` (ignorado
+  por Git). La revisión previa era **2026090502**; la app v0.9 recibe estos cambios por actualización remota. No se modificó el APK ni el motor.
+- Nueva variante **Fútbol Vivo** (`futbolvivo.site/api/agenda`), primera en el catálogo,
+  con receta `eventsJson`. Se usa **America/Lima (-300)**: su JSON coincide en ID, fecha,
+  título y hora con el de agenda18 consumido por `.mx`, cuyo JS declara ese huso. El frontend
+  de Futbolvivo usa `setUTCHours`, inconsistente con esos datos. Es una inferencia cruzada,
+  documentada en `docs/SOURCES-2026-10-26.md`; no trasladarla automáticamente a otras fuentes.
+- **Pelota Libre (.la)** conserva el ID histórico `pelotaalibrela` para continuidad,
+  pero cambia el dominio a `pelotalibre.la`, portada `/main.php`, agenda `/agenda.php`.
+  El dominio anterior `pelotaalibre.la` rechazó la conexión. Receta `menuR`, UTC+1 según
+  `/js/horario.js`. La muestra aún anuncia **25/oct**, por lo que cargar no implica actualidad.
+- **Pelota Libre HD** usa `/live5/` para portada y agenda. `/es/agenda/` redirige allí.
+  Conserva `menu2` y hora de Perú. Con el User-Agent de la app respondió 200; con uno
+  genérico devolvió 406.
+- Nueva variante **Pelota Libre (mx)**: receta `strapiMx`, endpoint público
+  `https://agenda18.com/agenda.json`, fecha ISO y zona America/Lima. Receta separada para no
+  alterar `strapi` heredada. Solo en catálogo v2; el contrato v1 no admite `request.path`
+  hacia otro host. `config.example.json` sí incluye los otros tres cambios compatibles.
+- Verificación local usando **ConfigCodec/RecipeEngine reales en JVM**, Jsoup 1.18.1 y
+  respuestas descargadas: Futbolvivo **10 eventos/28 señales**, `.mx` **10/28**, `live5`
+  **9/11** (URLs duplicadas unificadas) y `.la` **2/5**. Se comprobaron conversión horaria,
+  cruce de fecha, evento sin señal, agenda vacía y rechazo de HTML ajeno al formato.
+  La red se sustituyó en ese ensayo por muestras; no equivale al inspector Android.
+  Después se reconectó la TV por ADB: firma y extracción real de estas cuatro fuentes,
+  Al Ángulo 2 y Rústico verificadas ejecutando las clases del APK release v0.9 mediante
+  `app_process` con un lanzador temporal; no se reemplazó la app instalada. Se incorporan
+  mirrors `alangulotv.sx` y `rusticotvplus.org` ya publicados por mantenimiento en v1.
+  Resultado: seis fuentes sin errores. La verificación de reproducción se registra en
+  `docs/SOURCES-2026-10-26.md`.
+
+- Prueba visual en TV: seis variantes desbordaban el `Row` de v0.9, estirando el último
+  chip y ocultando la agenda. Revisión 2026102603 desactiva `pelotalibremas` (agenda 404)
+  y `futbollibrehdlol` (redirige a Futbolvivo; además su huso histórico ya no corresponde).
+  Se conservan sus definiciones para rollback; quedan las cuatro variantes vigentes.
+  Para ampliar más variantes en el futuro, cambiar el selector por una fila desplazable.
+
+- Revisión 2026102604: `menu2Live5` deriva de `menu2` y cambia únicamente
+  `https://streamx305.sbs/` por `https://streamx723.sbs/` en las URLs decodificadas.
+  Redirección observada en el servidor real; evita que la navegación anti-popup del
+  main frame bloquee la migración de host. No se afloja esa protección ni se modifica Kotlin.
+  Las señales de `playvi.org` no cambian. Validación real en el motor release de la TV aprobada.
 
 ## Actualización del reproductor — septiembre 2026
 

@@ -3,9 +3,9 @@
   "name": "Pelota Libre (la)",
   "platform": "Pelota Libre",
   "mirrors": [
-    "https://pelotaalibre.la"
+    "https://pelotalibre.la"
   ],
-  "homePath": "/",
+  "homePath": "/main.php",
   "agendaPath": "/agenda.php",
   "sourceUtcOffsetMinutes": 60,
   "targetUtcOffsetMinutes": -180,
